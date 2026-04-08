@@ -16,15 +16,15 @@ export function DownloadModal({ softwareId, isOpen, onClose }: { softwareId: num
 
   useEffect(() => {
     if (isOpen && softwareId) {
-      fetchApi<{ hint: string }>(`/software/${softwareId}/hint`).then(res => {
-        if (res.code === 0) {
-          setExpectedCode(res.data.hint);
-        } else {
-          toast.error(res.message || "Failed to fetch download hint");
-        }
-      }).catch(() => {
-        toast.error("Network error while fetching hint");
-      });
+      // fetchApi<{ hint: string }>(`/software/${softwareId}/hint`).then(res => {
+      //   if (res.code === 0) {
+      //     setExpectedCode(res.data.hint);
+      //   } else {
+      //     toast.error(res.message || "Failed to fetch download hint");
+      //   }
+      // }).catch(() => {
+      //   toast.error("Network error while fetching hint");
+      // });
     }
   }, [isOpen, softwareId]);
 
@@ -74,7 +74,7 @@ export function DownloadModal({ softwareId, isOpen, onClose }: { softwareId: num
                 onChange={(e) => setCode(e.target.value)}
                 required
               />
-              <p className="text-xs text-muted-foreground">{t.code_hint}: {expectedCode}</p>
+              {/*<p className="text-xs text-muted-foreground">{t.code_hint}: {expectedCode}</p>*/}
             </div>
             <Button type="submit" className="w-full">
               {t.get_link}

@@ -1,52 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="00a13036-d33e-46d6-91cc-000a216ae9ea" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/components.json" beforeDir="false" afterPath="$PROJECT_DIR$/components.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data.db-shm" beforeDir="false" afterPath="$PROJECT_DIR$/data.db-shm" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data.db-wal" beforeDir="false" afterPath="$PROJECT_DIR$/data.db-wal" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fix-imports.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/fix-imports.cjs" afterDir="false" />
+    <list default="true" id="00a13036-d33e-46d6-91cc-000a216ae9ea" name="更改" comment="Add Turso database support and enhance error handling in API calls&#10;&#10;- Introduced Turso database configuration in .env.example&#10;- Updated API routes to use async/await and improved error handling&#10;- Enhanced favorite management in the software card component&#10;- Added Docker support with Dockerfile and docker-compose.yml&#10;- Updated README to reflect database changes and setup instructions">
       <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/metadata.json" beforeDir="false" afterPath="$PROJECT_DIR$/metadata.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/db/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/db/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/middlewares/auth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/middlewares/auth.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/middlewares/signature.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/middlewares/signature.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/routes/auth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/auth.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/routes/favorites.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/favorites.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/routes/software.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/software.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/utils/externalApiClient.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/utils/externalApiClient.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/AuthModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/AuthModal.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/DownloadModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/DownloadModal.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/SoftwareCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/SoftwareCard.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/badge.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/badge.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/button.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/button.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/card.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/card.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/dialog.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/dialog.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/dropdown-menu.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/dropdown-menu.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/input.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/input.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/pagination.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/pagination.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/select.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/select.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/separator.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/separator.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/sheet.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/sheet.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/sonner.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/sonner.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/tabs.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/tabs.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/i18n.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/i18n.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/api.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/utils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/utils.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/store.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/store.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/vite.config.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -98,7 +55,7 @@
     "nodejs_package_manager_path": "G:\\Tools\\Nodejs\\nvm4w\\nodejs\\npm.cmd",
     "npm.dev.executor": "Run",
     "settings.editor.selected.configurable": "GrepConsole",
-    "ts.external.directory.path": "D:\\Program Files\\Jetbrains\\WebStorm\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
+    "ts.external.directory.path": "G:\\Projects\\WebStorm\\soft-share\\node_modules\\typescript\\lib",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -140,12 +97,28 @@
       <updated>1752126258834</updated>
       <workItem from="1752126260374" duration="37000" />
       <workItem from="1775657077806" duration="1232000" />
-      <workItem from="1775659288140" duration="1961000" />
+      <workItem from="1775659288140" duration="2355000" />
     </task>
+    <task id="LOCAL-00001" summary="Add Turso database support and enhance error handling in API calls&#10;&#10;- Introduced Turso database configuration in .env.example&#10;- Updated API routes to use async/await and improved error handling&#10;- Enhanced favorite management in the software card component&#10;- Added Docker support with Dockerfile and docker-compose.yml&#10;- Updated README to reflect database changes and setup instructions">
+      <option name="closed" value="true" />
+      <created>1775661511636</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1775661511636</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
+    <option name="CHECK_NEW_TODO" value="false" />
+    <MESSAGE value="Add Turso database support and enhance error handling in API calls&#10;&#10;- Introduced Turso database configuration in .env.example&#10;- Updated API routes to use async/await and improved error handling&#10;- Enhanced favorite management in the software card component&#10;- Added Docker support with Dockerfile and docker-compose.yml&#10;- Updated README to reflect database changes and setup instructions" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add Turso database support and enhance error handling in API calls&#10;&#10;- Introduced Turso database configuration in .env.example&#10;- Updated API routes to use async/await and improved error handling&#10;- Enhanced favorite management in the software card component&#10;- Added Docker support with Dockerfile and docker-compose.yml&#10;- Updated README to reflect database changes and setup instructions" />
+    <option name="NON_MODAL_COMMIT_POSTPONE_SLOW_CHECKS" value="false" />
   </component>
   <component name="github-copilot-workspace">
     <instructionFileLocations>
