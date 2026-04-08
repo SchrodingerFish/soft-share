@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAppStore, useAuthStore } from "./store";
 import { translations } from "./i18n";
@@ -15,13 +15,14 @@ import { Tabs, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "./components/ui/pagination";
 import { Moon, Sun, Globe, Search, User, LogOut, Heart, Filter } from "lucide-react";
 import { Toaster } from "./components/ui/sonner";
+import { toast } from "sonner";
 
 const CATEGORIES = ["Dev", "System", "Download", "Media", "Productivity", "Design"];
 const PLATFORMS = ["Windows", "macOS", "Android"];
 
 export default function App() {
   const { theme, lang, setTheme, setLang } = useAppStore();
-  const { user, logout } = useAuthStore();
+  const { user, logout, setFavoriteIds, favoriteIds } = useAuthStore();
   const t = translations[lang];
 
   const [softwareList, setSoftwareList] = useState<Software[]>([]);
@@ -36,46 +37,100 @@ export default function App() {
   const platform = searchParams.get("platform") || "";
   const showFavorites = searchParams.get("favorites") === "true";
 
-  const updateParams = (updates: Record<string, string | null>) => {
-    const newParams = new URLSearchParams(searchParams);
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value === null || value === "" || (key === "page" && value === "1") || (key === "limit" && value === "20") || (key === "favorites" && value === "false")) {
-        newParams.delete(key);
-      } else {
-        newParams.set(key, value);
-      }
+  const [localSearch, setLocalSearch] = useState(search);
+
+  useEffect(() => {
+    setLocalSearch(search);
+  }, [search]);
+
+  useEffect(() => {
+    if (user) {
+      fetchApi<Software[]>("/favorites").then(res => {
+        if (res.code === 0) {
+          setFavoriteIds(res.data.map(s => s.id));
+        }
+      });
+    }
+  }, [user, setFavoriteIds]);
+
+  const updateParams = useCallback((updates: Record<string, string | null>) => {
+    setSearchParams(prev => {
+      const newParams = new URLSearchParams(prev);
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value === null || value === "" || (key === "page" && value === "1") || (key === "limit" && value === "20") || (key === "favorites" && value === "false")) {
+          newParams.delete(key);
+        } else {
+          newParams.set(key, value);
+        }
+      });
+      return newParams;
     });
-    setSearchParams(newParams);
-  };
+  }, [setSearchParams]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localSearch !== search) {
+        updateParams({ search: localSearch, page: "1", favorites: null });
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [localSearch, search, updateParams]);
 
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [downloadModalOpen, setDownloadModalOpen] = useState(false);
   const [selectedSoftwareId, setSelectedSoftwareId] = useState<number | null>(null);
 
   const loadData = async () => {
-    if (showFavorites) {
-      if (!user) return;
-      const res = await fetchApi<Software[]>("/favorites");
-      if (res.code === 0) {
-        setSoftwareList(res.data);
-        setTotal(res.data.length);
+    try {
+      if (showFavorites) {
+        if (!user) return;
+        const res = await fetchApi<Software[]>("/favorites");
+        if (res.code === 0) {
+          setSoftwareList(res.data);
+          setTotal(res.data.length);
+        } else {
+          toast.error(res.message || "Failed to load favorites");
+        }
+      } else {
+        const res = await fetchApi<{ items: Software[], total: number }>(
+          `/software?page=${page}&limit=${limit}&search=${search}&category=${category}&platform=${platform}`
+        );
+        if (res.code === 0) {
+          setSoftwareList(res.data.items);
+          setTotal(res.data.total);
+        } else {
+          toast.error(res.message || "Failed to load software list");
+        }
       }
-    } else {
-      const res = await fetchApi<{ items: Software[], total: number }>(
-        `/software?page=${page}&limit=${limit}&search=${search}&category=${category}&platform=${platform}`
-      );
-      if (res.code === 0) {
-        setSoftwareList(res.data.items);
-        setTotal(res.data.total);
-      }
+    } catch (err) {
+      toast.error("An unexpected error occurred while loading data");
     }
   };
 
   useEffect(() => {
+    // Only reload data when search/filters/page change, or when toggling showFavorites
+    // We remove 'user' and 'favoriteIds' from here to prevent re-fetching the whole list on every toggle
     loadData();
-  }, [page, limit, search, category, platform, showFavorites, user]);
+  }, [page, limit, search, category, platform, showFavorites]);
 
   const totalPages = Math.ceil(total / limit) || 1;
+
+  const displayedSoftware = showFavorites 
+    ? softwareList.filter(s => favoriteIds.includes(s.id))
+    : softwareList;
+
+  // Sync softwareList with favorites when in "showFavorites" mode and favoriteIds change
+  // but only if we are not already fetching
+  useEffect(() => {
+    if (showFavorites && user) {
+      // If we are in favorites view, we want to keep the list in sync with the store
+      // but without a full API reload if possible.
+      // However, if the list is empty and we have favoriteIds, we should fetch.
+      if (softwareList.length === 0 && favoriteIds.length > 0) {
+        loadData();
+      }
+    }
+  }, [showFavorites, user]);
 
   const handleDownload = (id: number) => {
     setSelectedSoftwareId(id);
@@ -129,8 +184,8 @@ export default function App() {
                 type="search"
                 placeholder={t.search_placeholder}
                 className="pl-8 bg-muted/50"
-                value={search}
-                onChange={(e) => updateParams({ search: e.target.value, page: "1", favorites: null })}
+                value={localSearch}
+                onChange={(e) => setLocalSearch(e.target.value)}
               />
             </div>
             {/* Mobile Search */}
@@ -140,8 +195,8 @@ export default function App() {
                 type="search"
                 placeholder={t.search_placeholder}
                 className="pl-8 bg-muted/50 h-9"
-                value={search}
-                onChange={(e) => updateParams({ search: e.target.value, page: "1", favorites: null })}
+                value={localSearch}
+                onChange={(e) => setLocalSearch(e.target.value)}
               />
             </div>
           </div>
@@ -233,13 +288,13 @@ export default function App() {
             )}
           </div>
 
-          {softwareList.length === 0 ? (
+          {displayedSoftware.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">
               {t.no_data}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {softwareList.map(software => (
+              {displayedSoftware.map(software => (
                 <SoftwareCard key={software.id} software={software} onDownload={handleDownload} />
               ))}
             </div>

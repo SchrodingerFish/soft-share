@@ -34,11 +34,11 @@ A full-stack web application built for sharing software, featuring a modern UI w
 - **Framework**: Express.js (Node.js) with modular routing (`/auth`, `/software`, `/favorites`)
 - **Language**: TypeScript
 - **Authentication**: JWT (JSON Web Tokens) + bcryptjs for password hashing
-- **Database**: SQLite3 (via `better-sqlite3`) with **WAL (Write-Ahead Logging)** mode enabled for high concurrency.
+- **Database**: Turso (libSQL) via `@libsql/client` for distributed edge database support.
 
-## 🗄️ Database Schema (SQLite)
+## 🗄️ Database Schema (Turso / libSQL)
 
-The application uses an embedded SQLite database (`data.db`) with the following core tables:
+The application uses a Turso (libSQL) database with the following core tables:
 
 1. **`users`**
    - `id`: INTEGER PRIMARY KEY
@@ -126,6 +126,10 @@ Create a `.env` file in the root directory (optional, defaults are provided in c
 JWT_SECRET="your_jwt_secret_key"
 SECRET_KEY="your_download_verification_secret_key"
 EXTERNAL_API_TOKEN="your_external_api_token"
+
+# Turso Database Configuration
+TURSO_DATABASE_URL="libsql://mydb-xxx.aws-ap-northeast-1.turso.io"
+TURSO_AUTH_TOKEN="your_turso_auth_token"
 ```
 
 ### 3. Build the Application
@@ -149,4 +153,4 @@ npm run start
 By default, the server runs on port `3000`.
 
 ### 5. Database Persistence
-The SQLite database is stored locally in `data.db`. In a containerized deployment (e.g., Docker, Cloud Run), ensure that the directory containing `data.db` is mounted to a persistent volume to prevent data loss on container restarts.
+The application uses Turso (libSQL) as a distributed edge database. If the `TURSO_DATABASE_URL` is not provided, it will gracefully fallback to a local SQLite file (`data.db`) for development purposes.

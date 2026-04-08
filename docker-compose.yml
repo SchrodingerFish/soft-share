@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET:-your_jwt_secret_key}
+      - SECRET_KEY=${SECRET_KEY:-your_download_verification_secret_key}
+      - EXTERNAL_API_TOKEN=${EXTERNAL_API_TOKEN:-your_external_api_token}
+      - TURSO_DATABASE_URL=${TURSO_DATABASE_URL}
+      - TURSO_AUTH_TOKEN=${TURSO_AUTH_TOKEN}
+    volumes:
+      - ./data.db:/app/data.db
+    restart: always

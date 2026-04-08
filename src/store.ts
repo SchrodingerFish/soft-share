@@ -3,13 +3,17 @@ import { create } from 'zustand';
 interface AuthState {
   user: { id: number; username: string } | null;
   token: string | null;
+  favoriteIds: number[];
   login: (user: { id: number; username: string }, token: string) => void;
   logout: () => void;
+  setFavoriteIds: (ids: number[]) => void;
+  toggleFavoriteId: (id: number) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: JSON.parse(localStorage.getItem('user') || 'null'),
   token: localStorage.getItem('token'),
+  favoriteIds: [],
   login: (user, token) => {
     localStorage.setItem('user', JSON.stringify(user));
     localStorage.setItem('token', token);
@@ -18,8 +22,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: () => {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
-    set({ user: null, token: null });
+    set({ user: null, token: null, favoriteIds: [] });
   },
+  setFavoriteIds: (ids) => set({ favoriteIds: ids }),
+  toggleFavoriteId: (id) => set((state) => ({
+    favoriteIds: state.favoriteIds.includes(id)
+      ? state.favoriteIds.filter(fid => fid !== id)
+      : [...state.favoriteIds, id]
+  })),
 }));
 
 interface AppState {
