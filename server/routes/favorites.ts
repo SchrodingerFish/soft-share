@@ -1,11 +1,11 @@
 import { Router } from "express";
 import db from "../db/index.js";
-import { authenticateToken, AuthRequest } from "../middlewares/auth.js";
+import { authenticate, AuthRequest } from "../middlewares/auth.js";
 
 const router = Router();
 
 // Get Favorites
-router.get("/", authenticateToken, async (req: AuthRequest, res) => {
+router.get("/", authenticate, async (req: AuthRequest, res) => {
   try {
     const result = await db.execute({
       sql: `
@@ -13,7 +13,7 @@ router.get("/", authenticateToken, async (req: AuthRequest, res) => {
         JOIN favorites f ON s.id = f.software_id
         WHERE f.user_id = ?
       `,
-      args: [req.user.id]
+      args: [req.user!.id]
     });
     
     const rows = result.rows.map((row: any) => ({
@@ -29,10 +29,10 @@ router.get("/", authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Toggle Favorite
-router.post("/", authenticateToken, async (req: AuthRequest, res) => {
+router.post("/", authenticate, async (req: AuthRequest, res) => {
   try {
     const { software_id } = req.body;
-    const user_id = req.user.id;
+    const user_id = req.user!.id;
     
     const existingResult = await db.execute({
       sql: "SELECT * FROM favorites WHERE user_id = ? AND software_id = ?",
@@ -60,10 +60,10 @@ router.post("/", authenticateToken, async (req: AuthRequest, res) => {
 });
 
 // Check Favorite Status
-router.get("/:software_id", authenticateToken, async (req: AuthRequest, res) => {
+router.get("/:software_id", authenticate, async (req: AuthRequest, res) => {
   try {
     const { software_id } = req.params;
-    const user_id = req.user.id;
+    const user_id = req.user!.id;
     
     const existingResult = await db.execute({
       sql: "SELECT * FROM favorites WHERE user_id = ? AND software_id = ?",

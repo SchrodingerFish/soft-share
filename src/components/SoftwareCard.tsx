@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Download, Heart, Monitor, Smartphone, Apple, Calendar, Flame, Copy } from "lucide-react";
+import { Download, Heart, Monitor, Smartphone, Apple, Calendar, Flame, Copy, Check } from "lucide-react";
 import { useAppStore, useAuthStore } from "../store";
 import { translations } from "../i18n";
 import { fetchApi } from "../lib/api";
@@ -19,6 +19,14 @@ export interface Software {
   description: string;
   screenshots: string[];
   popularity: number;
+  download_url: string;
+  link_status?: "valid" | "broken";
+  isSelected?: boolean;
+  onSelect?: (id: number) => void;
+  version_history?: { version: string; date: string; content: string }[];
+  tutorial?: string;
+  verification_code?: string;
+  related?: Software[];
 }
 
 export const SoftwareCard = React.memo(({ software, onDownload }: { software: Software; onDownload: (id: number) => void }) => {
@@ -72,7 +80,19 @@ export const SoftwareCard = React.memo(({ software, onDownload }: { software: So
   };
 
   return (
-    <Card className="flex flex-col h-full overflow-hidden hover:shadow-lg transition-shadow">
+    <Card className={`flex flex-col h-full overflow-hidden hover:shadow-lg transition-all relative ${software.isSelected ? 'ring-2 ring-primary border-primary' : ''}`}>
+      {/* Selection Checkbox */}
+      {software.onSelect && (
+        <div 
+          className={`absolute top-3 left-3 z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors cursor-pointer ${software.isSelected ? 'bg-primary border-primary text-primary-foreground' : 'bg-background/50 border-white/50 backdrop-blur-sm'}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            software.onSelect?.(software.id);
+          }}
+        >
+          {software.isSelected && <Check className="h-4 w-4" />}
+        </div>
+      )}
       {software.screenshots && software.screenshots.length > 0 && (
         <div className="h-40 w-full overflow-hidden bg-muted">
           <img src={software.screenshots[0]} alt={software.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -90,6 +110,11 @@ export const SoftwareCard = React.memo(({ software, onDownload }: { software: So
               <Copy className="w-3 h-3" />
             </span>
             <CardTitle className="text-xl leading-tight">{software.name}</CardTitle>
+            {software.link_status === 'broken' && (
+              <Badge variant="destructive" className="w-max text-[10px] py-0 px-1.5">
+                Link Broken
+              </Badge>
+            )}
             <CardDescription className="flex items-center gap-2 flex-wrap">
               <Badge variant="secondary">{software.version}</Badge>
               <span className="text-xs">{software.size}</span>
@@ -109,7 +134,7 @@ export const SoftwareCard = React.memo(({ software, onDownload }: { software: So
       <CardContent className="flex-grow">
         <p className="text-sm text-muted-foreground line-clamp-3">{software.description}</p>
         <div className="mt-4 flex flex-wrap gap-2">
-          {software.platforms.map(p => (
+          {Array.isArray(software.platforms) && software.platforms.map(p => (
             <Badge key={p} variant="outline" className="flex items-center gap-1">
               <PlatformIcon platform={p} />
               {p}
@@ -128,7 +153,7 @@ export const SoftwareCard = React.memo(({ software, onDownload }: { software: So
             {software.popularity}
           </span>
         </div>
-        <Button onClick={() => onDownload(software.id)} className="w-full gap-2">
+        <Button onClick={(e) => { e.stopPropagation(); onDownload(software.id); }} className="w-full gap-2">
           <Download className="w-4 h-4" />
           {t.download}
         </Button>

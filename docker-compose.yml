@@ -1,7 +1,7 @@
 services:
   # 应用服务
   app:
-    build:
+    build: 
       context: .
       dockerfile: Dockerfile
     container_name: softshare-app
@@ -12,20 +12,22 @@ services:
       - JWT_SECRET=${JWT_SECRET:-super-secret-key-for-dev}
       - SECRET_KEY=${SECRET_KEY:-default-secret-key}
       - EXTERNAL_API_TOKEN=${EXTERNAL_API_TOKEN}
-
+      
       # 数据库选择: sqlite, postgres, turso
       - DB_TYPE=${DB_TYPE:-sqlite}
-
+      
       # SQLite 配置
       - SQLITE_URL=file:/app/data/data.db
-
+      
       # Turso 配置
       - TURSO_DATABASE_URL=${TURSO_DATABASE_URL}
       - TURSO_AUTH_TOKEN=${TURSO_AUTH_TOKEN}
-
+      
       # PostgreSQL 配置 (连接到下方的 db 服务)
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-softshare}?sslmode=disable
-
+      
+      # AI 配置
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
     volumes:
       - ./data:/app/data
     depends_on:
