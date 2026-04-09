@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "./components/ui/tabs";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "./components/ui/pagination";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationFirst, PaginationLast } from "./components/ui/pagination";
 import { Moon, Sun, Globe, Search, User, LogOut, Heart, Filter } from "lucide-react";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner";
@@ -20,9 +20,51 @@ import { toast } from "sonner";
 const CATEGORIES = ["Dev", "System", "Download", "Media", "Productivity", "Design"];
 const PLATFORMS = ["Windows", "macOS", "Android"];
 
+const SoftwareGrid = React.memo(({ 
+  items, 
+  showFavorites, 
+  onDownload, 
+  noDataText 
+}: { 
+  items: Software[], 
+  showFavorites: boolean, 
+  onDownload: (id: number) => void,
+  noDataText: string
+}) => {
+  const favoriteIds = useAuthStore(state => state.favoriteIds);
+  
+  const displayedItems = React.useMemo(() => {
+    if (!showFavorites) return items;
+    return items.filter(s => favoriteIds.includes(s.id));
+  }, [items, showFavorites, favoriteIds]);
+
+  if (displayedItems.length === 0) {
+    return (
+      <div className="text-center py-20 text-muted-foreground">
+        {noDataText}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {displayedItems.map(software => (
+        <SoftwareCard key={software.id} software={software} onDownload={onDownload} />
+      ))}
+    </div>
+  );
+});
+
 export default function App() {
-  const { theme, lang, setTheme, setLang } = useAppStore();
-  const { user, logout, setFavoriteIds, favoriteIds } = useAuthStore();
+  const theme = useAppStore(state => state.theme);
+  const lang = useAppStore(state => state.lang);
+  const setTheme = useAppStore(state => state.setTheme);
+  const setLang = useAppStore(state => state.setLang);
+
+  const user = useAuthStore(state => state.user);
+  const logout = useAuthStore(state => state.logout);
+  const setFavoriteIds = useAuthStore(state => state.setFavoriteIds);
+
   const t = translations[lang];
 
   const [softwareList, setSoftwareList] = useState<Software[]>([]);
@@ -115,27 +157,17 @@ export default function App() {
 
   const totalPages = Math.ceil(total / limit) || 1;
 
-  const displayedSoftware = showFavorites 
-    ? softwareList.filter(s => favoriteIds.includes(s.id))
-    : softwareList;
-
-  // Sync softwareList with favorites when in "showFavorites" mode and favoriteIds change
-  // but only if we are not already fetching
+  // Sync softwareList with favorites when in "showFavorites" mode
   useEffect(() => {
-    if (showFavorites && user) {
-      // If we are in favorites view, we want to keep the list in sync with the store
-      // but without a full API reload if possible.
-      // However, if the list is empty and we have favoriteIds, we should fetch.
-      if (softwareList.length === 0 && favoriteIds.length > 0) {
-        loadData();
-      }
+    if (showFavorites && user && softwareList.length === 0) {
+      loadData();
     }
   }, [showFavorites, user]);
 
-  const handleDownload = (id: number) => {
+  const handleDownload = useCallback((id: number) => {
     setSelectedSoftwareId(id);
     setDownloadModalOpen(true);
-  };
+  }, []);
 
   const SidebarFilters = () => (
     <div className="space-y-8">
@@ -282,41 +314,81 @@ export default function App() {
                     <SelectItem value="10">10</SelectItem>
                     <SelectItem value="20">20</SelectItem>
                     <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             )}
           </div>
 
-          {displayedSoftware.length === 0 ? (
-            <div className="text-center py-20 text-muted-foreground">
-              {t.no_data}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {displayedSoftware.map(software => (
-                <SoftwareCard key={software.id} software={software} onDownload={handleDownload} />
-              ))}
-            </div>
-          )}
+          <SoftwareGrid 
+            items={softwareList} 
+            showFavorites={showFavorites} 
+            onDownload={handleDownload} 
+            noDataText={t.no_data}
+          />
 
           {/* Pagination */}
           {!showFavorites && totalPages > 1 && (
-            <div className="mt-8 flex justify-center">
+            <div className="mt-12 flex justify-center">
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
-                    <PaginationPrevious 
-                      onClick={() => updateParams({ page: Math.max(1, page - 1).toString() })} 
+                    <PaginationFirst 
+                      text={t.first_page}
+                      onClick={() => updateParams({ page: "1" })} 
                       className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                     />
                   </PaginationItem>
                   <PaginationItem>
-                    <span className="px-4 text-sm">Page {page} of {totalPages}</span>
+                    <PaginationPrevious 
+                      text={t.prev_page}
+                      onClick={() => updateParams({ page: Math.max(1, page - 1).toString() })} 
+                      className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
                   </PaginationItem>
+                  
+                  {/* Page Numbers */}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(p => {
+                      // Show current page, first, last, and 1 page around current
+                      return p === 1 || p === totalPages || Math.abs(p - page) <= 1;
+                    })
+                    .map((p, i, arr) => {
+                      const elements = [];
+                      // Add ellipsis if there's a gap
+                      if (i > 0 && p - arr[i - 1] > 1) {
+                        elements.push(
+                          <PaginationItem key={`ellipsis-${p}`}>
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        );
+                      }
+                      elements.push(
+                        <PaginationItem key={p}>
+                          <PaginationLink 
+                            isActive={p === page} 
+                            onClick={() => updateParams({ page: p.toString() })}
+                            className="cursor-pointer"
+                          >
+                            {p}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                      return elements;
+                    })}
+
                   <PaginationItem>
                     <PaginationNext 
+                      text={t.next_page}
                       onClick={() => updateParams({ page: Math.min(totalPages, page + 1).toString() })}
+                      className={page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  <PaginationItem>
+                    <PaginationLast 
+                      text={t.last_page}
+                      onClick={() => updateParams({ page: totalPages.toString() })} 
                       className={page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                     />
                   </PaginationItem>

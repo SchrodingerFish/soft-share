@@ -21,11 +21,12 @@ export interface Software {
   popularity: number;
 }
 
-export const SoftwareCard: React.FC<{ software: Software; onDownload: (id: number) => void }> = ({ software, onDownload }) => {
+export const SoftwareCard = React.memo(({ software, onDownload }: { software: Software; onDownload: (id: number) => void }) => {
   const { lang } = useAppStore();
   const t = translations[lang];
-  const { user, favoriteIds, toggleFavoriteId } = useAuthStore();
-  const isFavorite = favoriteIds.includes(software.id);
+  const user = useAuthStore(state => state.user);
+  const toggleFavoriteId = useAuthStore(state => state.toggleFavoriteId);
+  const isFavorite = useAuthStore(state => state.favoriteIds.includes(software.id));
 
   const toggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -134,4 +135,4 @@ export const SoftwareCard: React.FC<{ software: Software; onDownload: (id: numbe
       </CardFooter>
     </Card>
   );
-}
+});

@@ -5,8 +5,9 @@
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?logo=tailwind-css)
 ![Express](https://img.shields.io/badge/Express-4.x-lightgrey?logo=express)
 ![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?logo=postgresql)
 
-A full-stack web application built for sharing software, featuring a modern UI with Radix UI + Tailwind CSS, dark/light mode, internationalization (i18n), and a robust Node.js/SQLite backend.
+A full-stack web application built for sharing software, featuring a modern UI with Radix UI + Tailwind CSS, dark/light mode, internationalization (i18n), and a robust Node.js backend supporting both SQLite and PostgreSQL.
 
 ## ✨ Features
 
@@ -34,11 +35,13 @@ A full-stack web application built for sharing software, featuring a modern UI w
 - **Framework**: Express.js (Node.js) with modular routing (`/auth`, `/software`, `/favorites`)
 - **Language**: TypeScript
 - **Authentication**: JWT (JSON Web Tokens) + bcryptjs for password hashing
-- **Database**: Turso (libSQL) via `@libsql/client` for distributed edge database support.
+- **Database**: Dual-database support:
+  - **SQLite/Turso**: via `@libsql/client` (Default)
+  - **PostgreSQL**: via `pg` (Configurable via environment variables)
 
-## 🗄️ Database Schema (Turso / libSQL)
+## 🗄️ Database Schema
 
-The application uses a Turso (libSQL) database with the following core tables:
+The application supports both SQLite (libSQL) and PostgreSQL with the following core tables:
 
 1. **`users`**
    - `id`: INTEGER PRIMARY KEY
@@ -127,9 +130,19 @@ JWT_SECRET="your_jwt_secret_key"
 SECRET_KEY="your_download_verification_secret_key"
 EXTERNAL_API_TOKEN="your_external_api_token"
 
-# Turso Database Configuration
+# Database Selection
+# "sqlite" (default), "postgres", or "turso"
+DB_TYPE="sqlite"
+
+# SQLite Configuration (Required if DB_TYPE="sqlite")
+SQLITE_URL="file:data.db"
+
+# Turso Database Configuration (Required if DB_TYPE="turso")
 TURSO_DATABASE_URL="libsql://mydb-xxx.aws-ap-northeast-1.turso.io"
 TURSO_AUTH_TOKEN="your_turso_auth_token"
+
+# PostgreSQL Configuration (Required if DB_TYPE="postgres")
+DATABASE_URL="postgresql://user:password@localhost:5432/softshare"
 ```
 
 ### 3. Build the Application
@@ -153,4 +166,7 @@ npm run start
 By default, the server runs on port `3000`.
 
 ### 5. Database Persistence
-The application uses Turso (libSQL) as a distributed edge database. If the `TURSO_DATABASE_URL` is not provided, it will gracefully fallback to a local SQLite file (`data.db`) for development purposes.
+The application supports three database backends:
+- **sqlite**: Uses a local SQLite file (defaults to `data.db`). Configure via `SQLITE_URL`.
+- **turso**: Uses Turso (libSQL) as a distributed edge database. Requires `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN`.
+- **postgres**: Set `DB_TYPE="postgres"` and provide a valid `DATABASE_URL` to use PostgreSQL. The system will automatically initialize the schema on the first run.

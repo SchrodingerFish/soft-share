@@ -2,8 +2,30 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="00a13036-d33e-46d6-91cc-000a216ae9ea" name="更改" comment="Add Turso database support and enhance error handling in API calls&#10;&#10;- Introduced Turso database configuration in .env.example&#10;- Updated API routes to use async/await and improved error handling&#10;- Enhanced favorite management in the software card component&#10;- Added Docker support with Dockerfile and docker-compose.yml&#10;- Updated README to reflect database changes and setup instructions">
-      <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.dockerignore" beforeDir="false" afterPath="$PROJECT_DIR$/.dockerignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data.db" beforeDir="false" afterPath="$PROJECT_DIR$/data.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data.db-shm" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data.db-wal" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/metadata.json" beforeDir="false" afterPath="$PROJECT_DIR$/metadata.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/db/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/db/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/routes/auth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/auth.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/routes/favorites.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/favorites.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/routes/software.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/software.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/DownloadModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/DownloadModal.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/SoftwareCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/SoftwareCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ui/pagination.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/pagination.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/i18n.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/i18n.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/api.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/store.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/store.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -50,17 +72,18 @@
     "git-widget-placeholder": "master",
     "ignore.virus.scanning.warn.message": "true",
     "javascript.preferred.runtime.type.id": "node",
-    "last_opened_file_path": "G:/Projects/WebStorm/soft-share",
+    "last_opened_file_path": "G:/Projects/WebStorm/softshare",
     "nodejs_interpreter_path": "node",
     "nodejs_package_manager_path": "G:\\Tools\\Nodejs\\nvm4w\\nodejs\\npm.cmd",
     "npm.dev.executor": "Run",
     "settings.editor.selected.configurable": "GrepConsole",
-    "ts.external.directory.path": "G:\\Projects\\WebStorm\\soft-share\\node_modules\\typescript\\lib",
+    "ts.external.directory.path": "G:\\Projects\\WebStorm\\softshare\\node_modules\\typescript\\lib",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="G:\Projects\WebStorm\softshare" />
       <recent name="G:\Projects\WebStorm\soft-share" />
     </key>
   </component>

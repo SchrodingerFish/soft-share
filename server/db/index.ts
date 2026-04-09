@@ -1,46 +1,159 @@
 import { createClient } from "@libsql/client";
+import pg from "pg";
 
-const dbUrl = process.env.TURSO_DATABASE_URL || "file:data.db";
-const dbAuthToken = process.env.TURSO_AUTH_TOKEN;
+const { Pool } = pg;
 
-const db = createClient({
-  url: dbUrl,
-  authToken: dbAuthToken,
-});
+// Database type selection
+const DB_TYPE = process.env.DB_TYPE || "sqlite"; // "sqlite", "postgres", or "turso"
+
+interface DbResult {
+  rows: any[];
+  lastInsertRowid?: any;
+}
+
+interface DbClient {
+  execute: (query: { sql: string; args?: any[] } | string, args?: any[]) => Promise<DbResult>;
+  executeMultiple: (sql: string) => Promise<void>;
+  batch: (statements: { sql: string; args?: any[] }[], mode?: string) => Promise<void>;
+}
+
+let db: DbClient;
+
+if (DB_TYPE === "postgres") {
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+  });
+
+  db = {
+    execute: async (query, args) => {
+      const sql = typeof query === "string" ? query : query.sql;
+      const sqlArgs = typeof query === "string" ? args : query.args;
+      
+      let pgSql = sql;
+      if (sqlArgs && sqlArgs.length > 0) {
+        let index = 1;
+        pgSql = sql.replace(/\?/g, () => `$${index++}`);
+      }
+
+      const result = await pool.query(pgSql, sqlArgs);
+      return {
+        rows: result.rows,
+        lastInsertRowid: result.rows[0]?.id
+      };
+    },
+    executeMultiple: async (sql) => {
+      await pool.query(sql);
+    },
+    batch: async (statements) => {
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        for (const stmt of statements) {
+          let pgSql = stmt.sql;
+          if (stmt.args && stmt.args.length > 0) {
+            let index = 1;
+            pgSql = stmt.sql.replace(/\?/g, () => `$${index++}`);
+          }
+          await client.query(pgSql, stmt.args);
+        }
+        await client.query('COMMIT');
+      } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
+      } finally {
+        client.release();
+      }
+    }
+  };
+} else {
+  // Handle both sqlite and turso using libsql client
+  const url = DB_TYPE === "turso" 
+    ? process.env.TURSO_DATABASE_URL 
+    : (process.env.SQLITE_URL || "file:data.db");
+  
+  const authToken = DB_TYPE === "turso" ? process.env.TURSO_AUTH_TOKEN : undefined;
+
+  if (DB_TYPE === "turso" && !url) {
+    console.error("TURSO_DATABASE_URL is required when DB_TYPE is 'turso'");
+  }
+
+  const sqliteClient = createClient({
+    url: url as string,
+    authToken: authToken,
+  });
+
+  db = {
+    execute: async (query, args) => {
+      const result = await sqliteClient.execute(typeof query === "string" ? { sql: query, args } : query);
+      return {
+        rows: result.rows,
+        lastInsertRowid: result.lastInsertRowid
+      };
+    },
+    executeMultiple: async (sql) => {
+      await sqliteClient.executeMultiple(sql);
+    },
+    batch: async (statements, mode) => {
+      await sqliteClient.batch(statements, mode as any);
+    }
+  };
+}
 
 async function initDb() {
+  const isPostgres = DB_TYPE === "postgres";
+  
   // Setup tables
-  await db.executeMultiple(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE,
-      password TEXT
-    );
-    
-    CREATE TABLE IF NOT EXISTS software (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT,
-      version TEXT,
-      platforms TEXT, -- JSON array
-      category TEXT,
-      size TEXT,
-      update_date TEXT,
-      description TEXT,
-      screenshots TEXT, -- JSON array
-      popularity INTEGER,
-      download_url TEXT
-    );
-    
-    CREATE TABLE IF NOT EXISTS favorites (
+  const usersTable = isPostgres 
+    ? `CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username TEXT UNIQUE,
+        password TEXT
+      );`
+    : `CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        password TEXT
+      );`;
+
+  const softwareTable = isPostgres
+    ? `CREATE TABLE IF NOT EXISTS software (
+        id SERIAL PRIMARY KEY,
+        name TEXT,
+        version TEXT,
+        platforms TEXT,
+        category TEXT,
+        size TEXT,
+        update_date TEXT,
+        description TEXT,
+        screenshots TEXT,
+        popularity INTEGER,
+        download_url TEXT
+      );`
+    : `CREATE TABLE IF NOT EXISTS software (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        version TEXT,
+        platforms TEXT,
+        category TEXT,
+        size TEXT,
+        update_date TEXT,
+        description TEXT,
+        screenshots TEXT,
+        popularity INTEGER,
+        download_url TEXT
+      );`;
+
+  const favoritesTable = `CREATE TABLE IF NOT EXISTS favorites (
       user_id INTEGER,
       software_id INTEGER,
       PRIMARY KEY (user_id, software_id)
-    );
-  `);
+    );`;
+
+  await db.executeMultiple(usersTable + softwareTable + favoritesTable);
 
   // Seed initial data if empty
   const countResult = await db.execute("SELECT COUNT(*) as count FROM software");
-  const count = countResult.rows[0].count as number;
+  const count = parseInt(countResult.rows[0].count);
   
   if (count === 0) {
     const seedData = [
@@ -95,3 +208,4 @@ async function initDb() {
 initDb().catch(console.error);
 
 export default db;
+export { DB_TYPE };

@@ -16,13 +16,22 @@ router.post("/register", async (req, res) => {
   
   try {
     const hashedPassword = bcrypt.hashSync(password, 10);
+    const sql = process.env.DB_TYPE === "postgres" 
+      ? "INSERT INTO users (username, password) VALUES (?, ?) RETURNING id"
+      : "INSERT INTO users (username, password) VALUES (?, ?)";
+      
     const result = await db.execute({
-      sql: "INSERT INTO users (username, password) VALUES (?, ?)",
+      sql,
       args: [username, hashedPassword]
     });
-    res.json({ code: 0, message: "success", data: { id: result.lastInsertRowid?.toString(), username } });
+    
+    const id = process.env.DB_TYPE === "postgres" 
+      ? result.rows[0].id.toString()
+      : result.lastInsertRowid?.toString();
+
+    res.json({ code: 0, message: "success", data: { id, username } });
   } catch (err: any) {
-    if (err.message && err.message.includes('UNIQUE constraint failed')) {
+    if (err.message && (err.message.includes('UNIQUE constraint failed') || err.message.includes('duplicate key value violates unique constraint'))) {
       res.json({ code: 400, message: "Username already exists" });
     } else {
       res.json({ code: 500, message: err.message });

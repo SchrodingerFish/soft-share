@@ -1,15 +1,65 @@
 services:
+  # 应用服务
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: softshare-app
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - JWT_SECRET=${JWT_SECRET:-your_jwt_secret_key}
-      - SECRET_KEY=${SECRET_KEY:-your_download_verification_secret_key}
-      - EXTERNAL_API_TOKEN=${EXTERNAL_API_TOKEN:-your_external_api_token}
+      - JWT_SECRET=${JWT_SECRET:-super-secret-key-for-dev}
+      - SECRET_KEY=${SECRET_KEY:-default-secret-key}
+      - EXTERNAL_API_TOKEN=${EXTERNAL_API_TOKEN}
+
+      # 数据库选择: sqlite, postgres, turso
+      - DB_TYPE=${DB_TYPE:-sqlite}
+
+      # SQLite 配置
+      - SQLITE_URL=file:/app/data/data.db
+
+      # Turso 配置
       - TURSO_DATABASE_URL=${TURSO_DATABASE_URL}
       - TURSO_AUTH_TOKEN=${TURSO_AUTH_TOKEN}
+
+      # PostgreSQL 配置 (连接到下方的 db 服务)
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-softshare}?sslmode=disable
+
     volumes:
-      - ./data.db:/app/data.db
+      - ./data:/app/data
+    depends_on:
+      db:
+        condition: service_healthy
+        required: false # 只有当 DB_TYPE 为 postgres 时才真正需要 db 服务
     restart: always
+    networks:
+      - softshare-network
+
+  # PostgreSQL 数据库服务 (可选，供 DB_TYPE=postgres 使用)
+  db:
+    image: postgres:15-alpine
+    container_name: softshare-db
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-softshare}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-softshare}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - softshare-network
+    # 如果你只想在需要时启动，可以注释掉 ports 或者使用 profiles
+    ports:
+      - "5432:5432"
+
+networks:
+  softshare-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
