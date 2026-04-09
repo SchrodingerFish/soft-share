@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { useAppStore } from "../store";
+import { useAppStore, useAuthStore } from "../store";
 import { translations } from "../i18n";
 import { fetchApi } from "../lib/api";
 import { toast } from "sonner";
@@ -14,19 +14,27 @@ export function DownloadModal({ softwareId, isOpen, onClose }: { softwareId: num
   const { lang } = useAppStore();
   const t = translations[lang];
 
+  const { token, user } = useAuthStore();
+
   useEffect(() => {
     if (isOpen && softwareId) {
-      // fetchApi<{ hint: string }>(`/software/${softwareId}/hint`).then(res => {
-      //   if (res.code === 0) {
-      //     setExpectedCode(res.data.hint);
-      //   } else {
-      //     toast.error(res.message || "Failed to fetch download hint");
-      //   }
-      // }).catch(() => {
-      //   toast.error("Network error while fetching hint");
-      // });
+      if (!user?.is_paid) {
+        setExpectedCode("");
+        return;
+      }
+      fetchApi<{ hint: string }>(`/software/${softwareId}/hint`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      }).then(res => {
+        if (res.code === 0) {
+          setExpectedCode(res.data.hint);
+        } else {
+          setExpectedCode("");
+        }
+      }).catch(() => {
+        setExpectedCode("");
+      });
     }
-  }, [isOpen, softwareId]);
+  }, [isOpen, softwareId, user, token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +47,7 @@ export function DownloadModal({ softwareId, isOpen, onClose }: { softwareId: num
 
     if (res.code === 0) {
       setDownloadUrl(res.data.download_url);
-      toast.success("Success");
+      toast.success(t.success || "Success");
     } else {
       toast.error(res.message);
     }
@@ -74,7 +82,13 @@ export function DownloadModal({ softwareId, isOpen, onClose }: { softwareId: num
                 onChange={(e) => setCode(e.target.value)}
                 required
               />
-              {/*<p className="text-xs text-muted-foreground">{t.code_hint}: {expectedCode}</p>*/}
+              {expectedCode ? (
+                <p className="text-xs text-muted-foreground">{t.code_hint}: <span className="font-mono font-bold text-primary">{expectedCode}</span></p>
+              ) : (
+                <p className="text-xs text-destructive">
+                  {user ? (t.please_upgrade_hint || "Please upgrade to a paid account to view today's verification code hint.") : (t.please_login_upgrade_hint || "Please login and upgrade to a paid account to view today's verification code hint.")}
+                </p>
+              )}
             </div>
             <Button type="submit" className="w-full">
               {t.get_link}
@@ -88,8 +102,8 @@ export function DownloadModal({ softwareId, isOpen, onClose }: { softwareId: num
             </div>
             <div className="flex gap-2">
               <Button onClick={handleCopy} variant="outline" className="flex-1">{t.copy}</Button>
-              <Button render={<a href={downloadUrl} target="_blank" rel="noreferrer" />} className="flex-1">
-                Go to Download
+              <Button render={<a href={downloadUrl} target="_blank" rel="noreferrer" />} nativeButton={false} className="flex-1">
+                {t.go_to_download || "Go to Download"}
               </Button>
             </div>
           </div>

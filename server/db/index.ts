@@ -125,12 +125,14 @@ async function initDb() {
     ? `CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         username TEXT UNIQUE,
-        password TEXT
+        password TEXT,
+        role TEXT DEFAULT 'user'
       );`
     : `CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT UNIQUE,
-        password TEXT
+        password TEXT,
+        role TEXT DEFAULT 'user'
       );`;
 
   const softwareTable = isPostgres
@@ -145,7 +147,10 @@ async function initDb() {
         description TEXT,
         screenshots TEXT,
         popularity INTEGER,
-        download_url TEXT
+        download_url TEXT,
+        link_status TEXT DEFAULT 'valid',
+        version_history TEXT,
+        tutorial TEXT
       );`
     : `CREATE TABLE IF NOT EXISTS software (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -158,7 +163,26 @@ async function initDb() {
         description TEXT,
         screenshots TEXT,
         popularity INTEGER,
-        download_url TEXT
+        download_url TEXT,
+        link_status TEXT DEFAULT 'valid',
+        version_history TEXT,
+        tutorial TEXT
+      );`;
+
+  const collectionsTable = isPostgres
+    ? `CREATE TABLE IF NOT EXISTS collections (
+        id SERIAL PRIMARY KEY,
+        title TEXT,
+        description TEXT,
+        cover_image TEXT,
+        software_ids TEXT
+      );`
+    : `CREATE TABLE IF NOT EXISTS collections (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT,
+        description TEXT,
+        cover_image TEXT,
+        software_ids TEXT
       );`;
 
   const favoritesTable = `CREATE TABLE IF NOT EXISTS favorites (
@@ -171,8 +195,121 @@ async function initDb() {
     console.log("[DB] Creating tables...");
     // Execute individually for better error tracking
     await client.execute(usersTable);
+    // Ensure role column exists for existing databases
+    try {
+      await client.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'");
+    } catch (e) {}
+    try {
+      await client.execute("ALTER TABLE users ADD COLUMN email TEXT");
+    } catch (e) {}
+    try {
+      const isPostgres = DB_TYPE === "postgres";
+      await client.execute(`ALTER TABLE users ADD COLUMN is_paid ${isPostgres ? 'BOOLEAN DEFAULT FALSE' : 'INTEGER DEFAULT 0'}`);
+    } catch (e) {}
     await client.execute(softwareTable);
+    // Ensure link_status column exists for existing databases
+    try {
+      await client.execute("ALTER TABLE software ADD COLUMN link_status TEXT DEFAULT 'valid'");
+    } catch (e) {}
+    try {
+      await client.execute("ALTER TABLE software ADD COLUMN version_history TEXT DEFAULT '[]'");
+    } catch (e) {}
+    try {
+      await client.execute("ALTER TABLE software ADD COLUMN tutorial TEXT DEFAULT ''");
+    } catch (e) {}
+    try {
+      await client.execute("ALTER TABLE software ADD COLUMN verification_code TEXT DEFAULT ''");
+    } catch (e) {}
+    await client.execute(collectionsTable);
     await client.execute(favoritesTable);
+
+    // New tables for community features
+    const commentsTable = isPostgres
+      ? `CREATE TABLE IF NOT EXISTS comments (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id),
+          software_id INTEGER REFERENCES software(id),
+          rating INTEGER,
+          content TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );`
+      : `CREATE TABLE IF NOT EXISTS comments (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER,
+          software_id INTEGER,
+          rating INTEGER,
+          content TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );`;
+
+    const submissionsTable = isPostgres
+      ? `CREATE TABLE IF NOT EXISTS submissions (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id),
+          name TEXT,
+          version TEXT,
+          platforms TEXT,
+          category TEXT,
+          size TEXT,
+          description TEXT,
+          download_url TEXT,
+          status TEXT DEFAULT 'pending',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );`
+      : `CREATE TABLE IF NOT EXISTS submissions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER,
+          name TEXT,
+          version TEXT,
+          platforms TEXT,
+          category TEXT,
+          size TEXT,
+          description TEXT,
+          download_url TEXT,
+          status TEXT DEFAULT 'pending',
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );`;
+
+    const downloadLogsTable = isPostgres
+      ? `CREATE TABLE IF NOT EXISTS download_logs (
+          id SERIAL PRIMARY KEY,
+          software_id INTEGER REFERENCES software(id),
+          user_id INTEGER,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );`
+      : `CREATE TABLE IF NOT EXISTS download_logs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          software_id INTEGER,
+          user_id INTEGER,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );`;
+
+    await client.execute(commentsTable);
+    await client.execute(submissionsTable);
+    await client.execute(downloadLogsTable);
+
+    const notificationsTable = isPostgres
+      ? `CREATE TABLE IF NOT EXISTS notifications (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id),
+          title TEXT,
+          content TEXT,
+          type TEXT, -- 'update', 'system'
+          is_read BOOLEAN DEFAULT FALSE,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );`
+      : `CREATE TABLE IF NOT EXISTS notifications (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER,
+          title TEXT,
+          content TEXT,
+          type TEXT,
+          is_read BOOLEAN DEFAULT 0,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );`;
+
+    await client.execute(notificationsTable);
+
     console.log("[DB] Tables checked/created successfully.");
 
     // Seed initial data if empty
@@ -186,47 +323,81 @@ async function initDb() {
           name: "Visual Studio Code", version: "1.85.0", platforms: '["Windows", "macOS", "Android"]', category: "Dev",
           size: "90 MB", update_date: "2023-12-01", description: "A powerful, lightweight code editor.",
           screenshots: '["https://picsum.photos/seed/vscode1/800/600", "https://picsum.photos/seed/vscode2/800/600"]',
-          popularity: 9999, download_url: "https://code.visualstudio.com/download"
+          popularity: 9999, download_url: "https://code.visualstudio.com/download",
+          version_history: '[{"version": "1.85.0", "date": "2023-12-01", "content": "Update UI and fix bugs"}, {"version": "1.84.0", "date": "2023-11-01", "content": "New features"}]',
+          tutorial: "## VS Code Tutorial\n\n1. Download and install.\n2. Open your project folder.\n3. Install extensions like Prettier or ESLint."
         },
         {
           name: "Google Chrome", version: "120.0.0", platforms: '["Windows", "macOS", "Android"]', category: "System",
           size: "120 MB", update_date: "2023-11-28", description: "Fast, secure, and free web browser.",
           screenshots: '["https://picsum.photos/seed/chrome1/800/600"]',
-          popularity: 8500, download_url: "https://www.google.com/chrome/"
+          popularity: 8500, download_url: "https://www.google.com/chrome/",
+          version_history: '[]', tutorial: "Just install and browse!"
         },
         {
           name: "VLC Media Player", version: "3.0.20", platforms: '["Windows", "macOS", "Android"]', category: "Media",
           size: "40 MB", update_date: "2023-10-15", description: "Free and open source cross-platform multimedia player.",
           screenshots: '["https://picsum.photos/seed/vlc1/800/600"]',
-          popularity: 7200, download_url: "https://www.videolan.org/vlc/"
+          popularity: 7200, download_url: "https://www.videolan.org/vlc/",
+          version_history: '[]', tutorial: "Supports all formats."
         },
         {
           name: "Figma", version: "116.3.0", platforms: '["Windows", "macOS"]', category: "Design",
           size: "150 MB", update_date: "2023-11-10", description: "Collaborative interface design tool.",
           screenshots: '["https://picsum.photos/seed/figma1/800/600"]',
-          popularity: 6800, download_url: "https://www.figma.com/downloads/"
+          popularity: 6800, download_url: "https://www.figma.com/downloads/",
+          version_history: '[]', tutorial: "Design together."
         },
         {
           name: "Notion", version: "2.23.0", platforms: '["Windows", "macOS", "Android"]', category: "Productivity",
           size: "85 MB", update_date: "2023-12-05", description: "All-in-one workspace for your notes, tasks, wikis, and databases.",
           screenshots: '["https://picsum.photos/seed/notion1/800/600"]',
-          popularity: 5400, download_url: "https://www.notion.so/desktop"
+          popularity: 5400, download_url: "https://www.notion.so/desktop",
+          version_history: '[]', tutorial: "Organize everything."
         },
         {
           name: "Postman", version: "10.20.0", platforms: '["Windows", "macOS"]', category: "Dev",
           size: "110 MB", update_date: "2023-11-20", description: "API platform for building and using APIs.",
           screenshots: '["https://picsum.photos/seed/postman1/800/600"]',
-          popularity: 4900, download_url: "https://www.postman.com/downloads/"
+          popularity: 4900, download_url: "https://www.postman.com/downloads/",
+          version_history: '[]', tutorial: "Test your APIs."
         }
       ];
       
       const statements = seedData.map(item => ({
-        sql: `INSERT INTO software (name, version, platforms, category, size, update_date, description, screenshots, popularity, download_url)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        args: [item.name, item.version, item.platforms, item.category, item.size, item.update_date, item.description, item.screenshots, item.popularity, item.download_url]
+        sql: `INSERT INTO software (name, version, platforms, category, size, update_date, description, screenshots, popularity, download_url, version_history, tutorial)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          item.name, item.version, item.platforms, item.category, item.size, item.update_date, 
+          item.description, item.screenshots, item.popularity, item.download_url,
+          item.version_history, item.tutorial
+        ]
       }));
       
       await client.batch(statements, "write");
+
+      // Seed collections
+      const collectionData = [
+        {
+          title: "Developer Essentials",
+          description: "Must-have tools for every software engineer.",
+          cover_image: "https://picsum.photos/seed/devcol/1200/600",
+          software_ids: "[1, 6]"
+        },
+        {
+          title: "Productivity Boosters",
+          description: "Stay organized and get more done.",
+          cover_image: "https://picsum.photos/seed/prodcol/1200/600",
+          software_ids: "[5, 2]"
+        }
+      ];
+
+      const colStatements = collectionData.map(c => ({
+        sql: "INSERT INTO collections (title, description, cover_image, software_ids) VALUES (?, ?, ?, ?)",
+        args: [c.title, c.description, c.cover_image, c.software_ids]
+      }));
+
+      await client.batch(colStatements, "write");
       console.log("[DB] Seeding completed.");
     } else {
       console.log(`[DB] Database already contains ${count} items. Skipping seed.`);

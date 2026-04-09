@@ -4,6 +4,15 @@ import { useAppStore, useAuthStore } from "./store";
 import { translations } from "./i18n";
 import { fetchApi } from "./lib/api";
 import { Software, SoftwareCard } from "./components/SoftwareCard";
+import { SoftwareDetail } from "./components/SoftwareDetail";
+import { CollectionsView } from "./components/CollectionsView";
+import { AdminDashboard } from "./components/AdminDashboard";
+import { AIAssistant } from "./components/AIAssistant";
+import { SoftwareComparison } from "./components/SoftwareComparison";
+import { SoftwareSubmission } from "./components/SoftwareSubmission";
+import { Rankings } from "./components/Rankings";
+import { UserCenter } from "./components/UserCenter";
+import { Recommendations } from "./components/Recommendations";
 import { AuthModal } from "./components/AuthModal";
 import { DownloadModal } from "./components/DownloadModal";
 import { Button } from "./components/ui/button";
@@ -13,7 +22,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationFirst, PaginationLast } from "./components/ui/pagination";
-import { Moon, Sun, Globe, Search, User, LogOut, Heart, Filter } from "lucide-react";
+import { Moon, Sun, Globe, Search, User, LogOut, Heart, Filter, Sparkles, Scale, Plus, Bell } from "lucide-react";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner";
 
@@ -24,11 +33,17 @@ const SoftwareGrid = React.memo(({
   items, 
   showFavorites, 
   onDownload, 
+  onDetail,
+  onSelect,
+  selectedIds,
   noDataText 
 }: { 
   items: Software[], 
   showFavorites: boolean, 
   onDownload: (id: number) => void,
+  onDetail?: (id: number) => void,
+  onSelect?: (id: number) => void,
+  selectedIds?: number[],
   noDataText: string
 }) => {
   const favoriteIds = useAuthStore(state => state.favoriteIds);
@@ -49,7 +64,16 @@ const SoftwareGrid = React.memo(({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {displayedItems.map(software => (
-        <SoftwareCard key={software.id} software={software} onDownload={onDownload} />
+        <div key={software.id} onClick={() => onDetail?.(software.id)} className="cursor-pointer">
+          <SoftwareCard 
+            software={{
+              ...software,
+              isSelected: selectedIds?.includes(software.id),
+              onSelect: onSelect
+            }} 
+            onDownload={onDownload} 
+          />
+        </div>
       ))}
     </div>
   );
@@ -64,6 +88,8 @@ export default function App() {
   const user = useAuthStore(state => state.user);
   const logout = useAuthStore(state => state.logout);
   const setFavoriteIds = useAuthStore(state => state.setFavoriteIds);
+  const unreadCount = useAuthStore(state => state.unreadCount);
+  const setUnreadCount = useAuthStore(state => state.setUnreadCount);
 
   const t = translations[lang];
 
@@ -78,8 +104,29 @@ export default function App() {
   const category = searchParams.get("category") || "";
   const platform = searchParams.get("platform") || "";
   const showFavorites = searchParams.get("favorites") === "true";
+  const showAdmin = searchParams.get("admin") === "true";
+  const showCollections = searchParams.get("collections") === "true";
+  const showAI = searchParams.get("ai") === "true";
+  const showRankings = searchParams.get("rankings") === "true";
+  const showSubmit = searchParams.get("submit") === "true";
+  const showUserCenter = searchParams.get("user") === "true";
+  const compareIds = searchParams.get("compare")?.split(",").map(Number) || [];
+  const detailId = searchParams.get("detail");
 
   const [localSearch, setLocalSearch] = useState(search);
+  const [selectedForCompare, setSelectedForCompare] = useState<number[]>(compareIds);
+
+  useEffect(() => {
+    setSelectedForCompare(compareIds);
+  }, [searchParams.get("compare")]);
+
+  const handleSelectForCompare = useCallback((id: number) => {
+    setSelectedForCompare(prev => {
+      const next = prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id];
+      if (next.length > 2) return prev;
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     setLocalSearch(search);
@@ -92,14 +139,21 @@ export default function App() {
           setFavoriteIds(res.data.map(s => s.id));
         }
       });
+      
+      // Fetch unread count
+      fetchApi<{ items: any[], unreadCount: number }>("/user/notifications").then(res => {
+        if (res.code === 0) {
+          setUnreadCount(res.data.unreadCount);
+        }
+      });
     }
-  }, [user, setFavoriteIds]);
+  }, [user, setFavoriteIds, setUnreadCount]);
 
   const updateParams = useCallback((updates: Record<string, string | null>) => {
     setSearchParams(prev => {
       const newParams = new URLSearchParams(prev);
       Object.entries(updates).forEach(([key, value]) => {
-        if (value === null || value === "" || (key === "page" && value === "1") || (key === "limit" && value === "20") || (key === "favorites" && value === "false")) {
+        if (value === null || value === "" || (key === "page" && value === "1") || (key === "limit" && value === "20") || (key === "favorites" && value === "false") || (key === "admin" && value === "false") || (key === "collections" && value === "false")) {
           newParams.delete(key);
         } else {
           newParams.set(key, value);
@@ -123,6 +177,7 @@ export default function App() {
   const [selectedSoftwareId, setSelectedSoftwareId] = useState<number | null>(null);
 
   const loadData = async () => {
+    if (showAdmin || showCollections || detailId || showAI || showRankings || showSubmit || showUserCenter || compareIds.length === 2) return;
     try {
       if (showFavorites) {
         if (!user) return;
@@ -152,8 +207,10 @@ export default function App() {
   useEffect(() => {
     // Only reload data when search/filters/page change, or when toggling showFavorites
     // We remove 'user' and 'favoriteIds' from here to prevent re-fetching the whole list on every toggle
-    loadData();
-  }, [page, limit, search, category, platform, showFavorites]);
+    if (!showAdmin && !showCollections && !detailId && !showAI && !showRankings && !showSubmit && !showUserCenter && compareIds.length < 2) {
+      loadData();
+    }
+  }, [page, limit, search, category, platform, showFavorites, showAdmin, showCollections, detailId, showAI, showRankings, showSubmit, showUserCenter, compareIds.length]);
 
   const totalPages = Math.ceil(total / limit) || 1;
 
@@ -168,6 +225,20 @@ export default function App() {
     setSelectedSoftwareId(id);
     setDownloadModalOpen(true);
   }, []);
+
+  const handleViewDetail = useCallback((id: number) => {
+    updateParams({ 
+      detail: id.toString(), 
+      favorites: null, 
+      admin: null, 
+      collections: null,
+      rankings: null,
+      ai: null,
+      submit: null,
+      user: null,
+      compare: null
+    });
+  }, [updateParams]);
 
   const SidebarFilters = () => (
     <div className="space-y-8">
@@ -207,18 +278,34 @@ export default function App() {
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <h1 className="text-2xl font-bold tracking-tight text-primary cursor-pointer" onClick={() => updateParams({ favorites: null, search: null, category: null, platform: null, page: null })}>
+            <h1 className="text-2xl font-bold tracking-tight text-primary cursor-pointer" onClick={() => updateParams({ favorites: null, admin: null, collections: null, detail: null, search: null, category: null, platform: null, page: null, ai: null, compare: null })}>
               {t.app_name}
             </h1>
-            <div className="hidden md:flex relative w-64">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder={t.search_placeholder}
-                className="pl-8 bg-muted/50"
-                value={localSearch}
-                onChange={(e) => setLocalSearch(e.target.value)}
-              />
+            <div className="hidden md:flex items-center gap-4 ml-8">
+              <Button variant={!showCollections && !showFavorites && !showAdmin && !detailId && !showAI && !showRankings && !showSubmit && compareIds.length < 2 ? "secondary" : "ghost"} onClick={() => updateParams({ collections: null, favorites: null, admin: null, detail: null, ai: null, compare: null, rankings: null, submit: null })}>
+                {t.all}
+              </Button>
+              <Button variant={showCollections ? "secondary" : "ghost"} onClick={() => updateParams({ collections: "true", favorites: null, admin: null, detail: null, ai: null, compare: null, rankings: null, submit: null })}>
+                {t.collections}
+              </Button>
+              <Button variant={showRankings ? "secondary" : "ghost"} onClick={() => updateParams({ rankings: "true", collections: null, favorites: null, admin: null, detail: null, ai: null, compare: null, submit: null })}>
+                {t.rankings}
+              </Button>
+              <Button variant={showAI ? "secondary" : "ghost"} onClick={() => updateParams({ ai: "true", collections: null, favorites: null, admin: null, detail: null, compare: null, rankings: null, submit: null })}>
+                <Sparkles className="h-4 w-4 mr-2" />
+                {t.ai_assistant}
+              </Button>
+              <div className="relative w-64">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder={t.search_placeholder}
+                  className="pl-8 bg-muted/50 border-none focus-visible:ring-1"
+                  value={localSearch}
+                  onChange={(e) => setLocalSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && updateParams({ search: localSearch, page: "1" })}
+                />
+              </div>
             </div>
             {/* Mobile Search */}
             <div className="flex md:hidden relative flex-1 max-w-[200px] ml-4">
@@ -238,6 +325,17 @@ export default function App() {
               {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
             
+            {user && (
+              <Button variant="ghost" size="icon" className="relative" onClick={() => updateParams({ user: "true", admin: null, favorites: null, collections: null, detail: null, ai: null, rankings: null, submit: null, compare: null })}>
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-[10px] text-white rounded-full flex items-center justify-center font-bold border-2 border-background">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </Button>
+            )}
+
             <DropdownMenu>
               <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
                 <Globe className="h-5 w-5" />
@@ -249,22 +347,38 @@ export default function App() {
             </DropdownMenu>
 
             {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger render={<Button variant="outline" className="gap-2" />}>
-                  <User className="h-4 w-4" />
-                  {user.username}
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => updateParams({ favorites: "true", page: "1" })}>
-                    <Heart className="mr-2 h-4 w-4" />
-                    {t.favorites}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => { logout(); updateParams({ favorites: null }); }}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    {t.logout}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" className="hidden sm:flex gap-2" onClick={() => updateParams({ submit: "true", admin: null, favorites: null, collections: null, detail: null, ai: null, rankings: null, compare: null })}>
+                  <Plus className="h-4 w-4" />
+                  {t.submit_software}
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger render={<Button variant="outline" className="gap-2" />}>
+                    <User className="h-4 w-4" />
+                    {user.username}
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {user.role === 'admin' && (
+                      <DropdownMenuItem onClick={() => updateParams({ admin: "true", favorites: null, collections: null, detail: null, page: "1", ai: null, rankings: null, submit: null, user: null })}>
+                        <Filter className="mr-2 h-4 w-4" />
+                        {t.admin_panel}
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem onClick={() => updateParams({ user: "true", admin: null, favorites: null, collections: null, detail: null, page: "1", ai: null, rankings: null, submit: null })}>
+                      <User className="mr-2 h-4 w-4" />
+                      {t.personal_center}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => updateParams({ favorites: "true", admin: null, collections: null, detail: null, page: "1", ai: null, rankings: null, submit: null, user: null })}>
+                      <Heart className="mr-2 h-4 w-4" />
+                      {t.favorites}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { logout(); updateParams({ favorites: null, admin: null, collections: null, detail: null, ai: null, rankings: null, submit: null, user: null }); }}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      {t.logout}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             ) : (
               <Button onClick={() => setAuthModalOpen(true)}>{t.login}</Button>
             )}
@@ -275,7 +389,7 @@ export default function App() {
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-4 py-8 flex flex-col md:flex-row gap-8">
         {/* Desktop Sidebar Filters */}
-        {!showFavorites && (
+        {!showFavorites && !showAdmin && !showCollections && !detailId && !showAI && !showRankings && !showSubmit && !showUserCenter && compareIds.length < 2 && (
           <aside className="hidden md:block w-64 flex-shrink-0">
             <SidebarFilters />
           </aside>
@@ -283,118 +397,161 @@ export default function App() {
 
         {/* Content Area */}
         <div className="flex-1">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-3">
-              {/* Mobile Filter Trigger */}
-              {!showFavorites && (
-                <Sheet>
-                  <SheetTrigger render={<Button variant="outline" size="icon" className="md:hidden" />}>
-                    <Filter className="h-4 w-4" />
-                  </SheetTrigger>
-                  <SheetContent side="left" className="w-[280px] sm:w-[350px]">
-                    <SheetHeader className="mb-6">
-                      <SheetTitle>Filters</SheetTitle>
-                    </SheetHeader>
-                    <SidebarFilters />
-                  </SheetContent>
-                </Sheet>
-              )}
-              <h2 className="text-2xl font-bold">
-                {showFavorites ? t.favorites : (category || platform || search ? "Search Results" : "All Software")}
-              </h2>
-            </div>
-            {!showFavorites && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">{t.items_per_page}:</span>
-                <Select value={limit.toString()} onValueChange={(v) => updateParams({ limit: v, page: "1" })}>
-                  <SelectTrigger className="w-[80px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="20">20</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                    <SelectItem value="100">100</SelectItem>
-                  </SelectContent>
-                </Select>
+          {showAdmin ? (
+            <AdminDashboard />
+          ) : showCollections ? (
+            <CollectionsView onDownload={handleDownload} />
+          ) : showAI ? (
+            <AIAssistant onDownload={handleDownload} />
+          ) : showRankings ? (
+            <Rankings onSelect={handleViewDetail} />
+          ) : showSubmit ? (
+            <SoftwareSubmission onBack={() => updateParams({ submit: null })} />
+          ) : showUserCenter ? (
+            <UserCenter onBack={() => updateParams({ user: null })} onDetail={handleViewDetail} onDownload={handleDownload} />
+          ) : compareIds.length === 2 ? (
+            <SoftwareComparison 
+              softwareA={softwareList.find(s => s.id === compareIds[0]) || softwareList[0]} 
+              softwareB={softwareList.find(s => s.id === compareIds[1]) || softwareList[1]} 
+              onBack={() => updateParams({ compare: null })}
+            />
+          ) : detailId ? (
+            <SoftwareDetail id={parseInt(detailId)} onBack={() => updateParams({ detail: null })} onDownload={handleDownload} />
+          ) : (
+            <>
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-3">
+                  {/* Mobile Filter Trigger */}
+                  {!showFavorites && (
+                    <Sheet>
+                      <SheetTrigger render={<Button variant="outline" size="icon" className="md:hidden" />}>
+                        <Filter className="h-4 w-4" />
+                      </SheetTrigger>
+                      <SheetContent side="left" className="w-[280px] sm:w-[350px]">
+                        <SheetHeader className="mb-6">
+                          <SheetTitle>Filters</SheetTitle>
+                        </SheetHeader>
+                        <SidebarFilters />
+                      </SheetContent>
+                    </Sheet>
+                  )}
+                  <h2 className="text-2xl font-bold">
+                    {showFavorites ? t.favorites : (category || platform || search ? "Search Results" : "All Software")}
+                  </h2>
+                </div>
+                <div className="flex items-center gap-4">
+                  {selectedForCompare.length > 0 && (
+                    <Button 
+                      variant="outline" 
+                      className="gap-2 border-primary text-primary"
+                      disabled={selectedForCompare.length !== 2}
+                      onClick={() => updateParams({ compare: selectedForCompare.join(",") })}
+                    >
+                      <Scale className="h-4 w-4" />
+                      {t.compare} ({selectedForCompare.length}/2)
+                    </Button>
+                  )}
+                  {!showFavorites && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">{t.items_per_page}:</span>
+                      <Select value={limit.toString()} onValueChange={(v) => updateParams({ limit: v, page: "1" })}>
+                        <SelectTrigger className="w-[80px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="10">10</SelectItem>
+                          <SelectItem value="20">20</SelectItem>
+                          <SelectItem value="50">50</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
 
-          <SoftwareGrid 
-            items={softwareList} 
-            showFavorites={showFavorites} 
-            onDownload={handleDownload} 
-            noDataText={t.no_data}
-          />
+              <SoftwareGrid 
+                items={softwareList} 
+                showFavorites={showFavorites} 
+                onDownload={handleDownload} 
+                onDetail={handleViewDetail}
+                onSelect={handleSelectForCompare}
+                selectedIds={selectedForCompare}
+                noDataText={t.no_data}
+              />
 
-          {/* Pagination */}
-          {!showFavorites && totalPages > 1 && (
-            <div className="mt-12 flex justify-center">
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationFirst 
-                      text={t.first_page}
-                      onClick={() => updateParams({ page: "1" })} 
-                      className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                    />
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationPrevious 
-                      text={t.prev_page}
-                      onClick={() => updateParams({ page: Math.max(1, page - 1).toString() })} 
-                      className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                    />
-                  </PaginationItem>
-                  
-                  {/* Page Numbers */}
-                  {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter(p => {
-                      // Show current page, first, last, and 1 page around current
-                      return p === 1 || p === totalPages || Math.abs(p - page) <= 1;
-                    })
-                    .map((p, i, arr) => {
-                      const elements = [];
-                      // Add ellipsis if there's a gap
-                      if (i > 0 && p - arr[i - 1] > 1) {
-                        elements.push(
-                          <PaginationItem key={`ellipsis-${p}`}>
-                            <PaginationEllipsis />
-                          </PaginationItem>
-                        );
-                      }
-                      elements.push(
-                        <PaginationItem key={p}>
-                          <PaginationLink 
-                            isActive={p === page} 
-                            onClick={() => updateParams({ page: p.toString() })}
-                            className="cursor-pointer"
-                          >
-                            {p}
-                          </PaginationLink>
-                        </PaginationItem>
-                      );
-                      return elements;
-                    })}
+              {!showFavorites && !category && !platform && !search && page === 1 && (
+                <Recommendations onDownload={handleDownload} onDetail={handleViewDetail} />
+              )}
 
-                  <PaginationItem>
-                    <PaginationNext 
-                      text={t.next_page}
-                      onClick={() => updateParams({ page: Math.min(totalPages, page + 1).toString() })}
-                      className={page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                    />
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationLast 
-                      text={t.last_page}
-                      onClick={() => updateParams({ page: totalPages.toString() })} 
-                      className={page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
+              {/* Pagination */}
+              {!showFavorites && totalPages > 1 && (
+                <div className="mt-12 flex justify-center">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationFirst 
+                          text={t.first_page}
+                          onClick={() => updateParams({ page: "1" })} 
+                          className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          text={t.prev_page}
+                          onClick={() => updateParams({ page: Math.max(1, page - 1).toString() })} 
+                          className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                      
+                      {/* Page Numbers */}
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter(p => {
+                          // Show current page, first, last, and 1 page around current
+                          return p === 1 || p === totalPages || Math.abs(p - page) <= 1;
+                        })
+                        .map((p, i, arr) => {
+                          const elements = [];
+                          // Add ellipsis if there's a gap
+                          if (i > 0 && p - arr[i - 1] > 1) {
+                            elements.push(
+                              <PaginationItem key={`ellipsis-${p}`}>
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            );
+                          }
+                          elements.push(
+                            <PaginationItem key={p}>
+                              <PaginationLink 
+                                isActive={p === page} 
+                                onClick={() => updateParams({ page: p.toString() })}
+                                className="cursor-pointer"
+                              >
+                                {p}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                          return elements;
+                        })}
+
+                      <PaginationItem>
+                        <PaginationNext 
+                          text={t.next_page}
+                          onClick={() => updateParams({ page: Math.min(totalPages, page + 1).toString() })}
+                          className={page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                      <PaginationItem>
+                        <PaginationLast 
+                          text={t.last_page}
+                          onClick={() => updateParams({ page: totalPages.toString() })} 
+                          className={page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
+            </>
           )}
         </div>
       </main>
