@@ -3,7 +3,12 @@ import { createServer as createViteServer } from "vite";
 import cors from "cors";
 import path from "path";
 import fs from "fs";
+import dotenv from "dotenv";
 
+// Load .env file with override: true to prioritize local .env over system environment variables
+dotenv.config({ override: true });
+
+import { initDb } from "./server/db/index.js";
 import authRoutes from "./server/routes/auth.js";
 import softwareRoutes from "./server/routes/software.js";
 import favoritesRoutes from "./server/routes/favorites.js";
@@ -11,6 +16,9 @@ import favoritesRoutes from "./server/routes/favorites.js";
 // Note: verifySignature is available if you want to protect specific backend routes from external callers.
 
 async function startServer() {
+  // Initialize database before starting the server
+  await initDb();
+
   const app = express();
   const PORT = 3000;
 

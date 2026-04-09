@@ -1,31 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="00a13036-d33e-46d6-91cc-000a216ae9ea" name="更改" comment="Add Turso database support and enhance error handling in API calls&#10;&#10;- Introduced Turso database configuration in .env.example&#10;- Updated API routes to use async/await and improved error handling&#10;- Enhanced favorite management in the software card component&#10;- Added Docker support with Dockerfile and docker-compose.yml&#10;- Updated README to reflect database changes and setup instructions">
-      <change beforePath="$PROJECT_DIR$/.dockerignore" beforeDir="false" afterPath="$PROJECT_DIR$/.dockerignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    <list default="true" id="00a13036-d33e-46d6-91cc-000a216ae9ea" name="更改" comment="Add support for multiple database configurations and enhance pagination component&#10;&#10;- Introduced SQLite and PostgreSQL support in the application&#10;- Updated environment configuration in .env.example&#10;- Enhanced pagination component with first and last page navigation&#10;- Improved error handling in user registration API&#10;- Updated README to reflect new database options and setup instructions">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data.db" beforeDir="false" afterPath="$PROJECT_DIR$/data.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data.db-shm" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data.db-wal" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/metadata.json" beforeDir="false" afterPath="$PROJECT_DIR$/metadata.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/db/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/db/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/routes/auth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/auth.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/routes/favorites.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/favorites.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/routes/software.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/software.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/DownloadModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/DownloadModal.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/SoftwareCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/SoftwareCard.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/pagination.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/pagination.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/i18n.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/i18n.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/lib/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/api.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/store.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/store.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -130,7 +110,15 @@
       <option name="project" value="LOCAL" />
       <updated>1775661511636</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Add support for multiple database configurations and enhance pagination component&#10;&#10;- Introduced SQLite and PostgreSQL support in the application&#10;- Updated environment configuration in .env.example&#10;- Enhanced pagination component with first and last page navigation&#10;- Improved error handling in user registration API&#10;- Updated README to reflect new database options and setup instructions">
+      <option name="closed" value="true" />
+      <created>1775701840216</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1775701840216</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -140,7 +128,8 @@
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_NEW_TODO" value="false" />
     <MESSAGE value="Add Turso database support and enhance error handling in API calls&#10;&#10;- Introduced Turso database configuration in .env.example&#10;- Updated API routes to use async/await and improved error handling&#10;- Enhanced favorite management in the software card component&#10;- Added Docker support with Dockerfile and docker-compose.yml&#10;- Updated README to reflect database changes and setup instructions" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add Turso database support and enhance error handling in API calls&#10;&#10;- Introduced Turso database configuration in .env.example&#10;- Updated API routes to use async/await and improved error handling&#10;- Enhanced favorite management in the software card component&#10;- Added Docker support with Dockerfile and docker-compose.yml&#10;- Updated README to reflect database changes and setup instructions" />
+    <MESSAGE value="Add support for multiple database configurations and enhance pagination component&#10;&#10;- Introduced SQLite and PostgreSQL support in the application&#10;- Updated environment configuration in .env.example&#10;- Enhanced pagination component with first and last page navigation&#10;- Improved error handling in user registration API&#10;- Updated README to reflect new database options and setup instructions" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add support for multiple database configurations and enhance pagination component&#10;&#10;- Introduced SQLite and PostgreSQL support in the application&#10;- Updated environment configuration in .env.example&#10;- Enhanced pagination component with first and last page navigation&#10;- Improved error handling in user registration API&#10;- Updated README to reflect new database options and setup instructions" />
     <option name="NON_MODAL_COMMIT_POSTPONE_SLOW_CHECKS" value="false" />
   </component>
   <component name="github-copilot-workspace">
