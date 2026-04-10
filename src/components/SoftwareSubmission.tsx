@@ -9,17 +9,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { toast } from "sonner";
 import { Upload, Send, ArrowLeft } from "lucide-react";
 
-const CATEGORIES = ["Dev", "System", "Download", "Media", "Productivity", "Design"];
-
 export const SoftwareSubmission: React.FC<{ onBack: () => void }> = ({ onBack }) => {
-  const { lang } = useAppStore();
+  const { lang, categories } = useAppStore();
   const t = translations[lang];
   
   const [formData, setFormData] = useState({
     name: "",
     version: "",
     platforms: ["Windows"],
-    category: "Dev",
+    category: categories.length > 0 ? categories[0].name : "Dev",
     size: "",
     description: "",
     download_url: ""
@@ -92,8 +90,8 @@ export const SoftwareSubmission: React.FC<{ onBack: () => void }> = ({ onBack })
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {CATEGORIES.map(c => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                {categories.map(c => (
+                  <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

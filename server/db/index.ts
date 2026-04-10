@@ -185,9 +185,17 @@ async function initDb() {
         software_ids TEXT
       );`;
 
-  const favoritesTable = `CREATE TABLE IF NOT EXISTS favorites (
+  const favoritesTable = isPostgres 
+    ? `CREATE TABLE IF NOT EXISTS favorites (
       user_id INTEGER,
       software_id INTEGER,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, software_id)
+    );`
+    : `CREATE TABLE IF NOT EXISTS favorites (
+      user_id INTEGER,
+      software_id INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (user_id, software_id)
     );`;
 
@@ -201,6 +209,9 @@ async function initDb() {
     } catch (e) {}
     try {
       await client.execute("ALTER TABLE users ADD COLUMN email TEXT");
+    } catch (e) {}
+    try {
+      await client.execute("ALTER TABLE users ADD COLUMN avatar TEXT");
     } catch (e) {}
     try {
       const isPostgres = DB_TYPE === "postgres";
@@ -222,6 +233,38 @@ async function initDb() {
     } catch (e) {}
     await client.execute(collectionsTable);
     await client.execute(favoritesTable);
+    try {
+      const isPostgres = DB_TYPE === "postgres";
+      await client.execute(`ALTER TABLE favorites ADD COLUMN created_at ${isPostgres ? 'TIMESTAMP' : 'DATETIME'} DEFAULT CURRENT_TIMESTAMP`);
+    } catch (e) {}
+
+    // Categories and Tags tables
+    const categoriesTable = isPostgres
+      ? `CREATE TABLE IF NOT EXISTS categories (
+          id SERIAL PRIMARY KEY,
+          name TEXT UNIQUE,
+          description TEXT
+        );`
+      : `CREATE TABLE IF NOT EXISTS categories (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT UNIQUE,
+          description TEXT
+        );`;
+        
+    const tagsTable = isPostgres
+      ? `CREATE TABLE IF NOT EXISTS tags (
+          id SERIAL PRIMARY KEY,
+          name TEXT UNIQUE,
+          color TEXT
+        );`
+      : `CREATE TABLE IF NOT EXISTS tags (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT UNIQUE,
+          color TEXT
+        );`;
+        
+    await client.execute(categoriesTable);
+    await client.execute(tagsTable);
 
     // New tables for community features
     const commentsTable = isPostgres
@@ -398,6 +441,35 @@ async function initDb() {
       }));
 
       await client.batch(colStatements, "write");
+      
+      // Seed categories
+      const categoryData = [
+        { name: "Dev", description: "Development tools" },
+        { name: "System", description: "System utilities" },
+        { name: "Download", description: "Download managers" },
+        { name: "Media", description: "Media players and editors" },
+        { name: "Productivity", description: "Office and productivity" },
+        { name: "Design", description: "Design and graphics" }
+      ];
+      const catStatements = categoryData.map(c => ({
+        sql: "INSERT INTO categories (name, description) VALUES (?, ?)",
+        args: [c.name, c.description]
+      }));
+      await client.batch(catStatements, "write");
+
+      // Seed tags
+      const tagData = [
+        { name: "Open Source", color: "green" },
+        { name: "Free", color: "blue" },
+        { name: "Cross-platform", color: "purple" },
+        { name: "Essential", color: "red" }
+      ];
+      const tagStatements = tagData.map(t => ({
+        sql: "INSERT INTO tags (name, color) VALUES (?, ?)",
+        args: [t.name, t.color]
+      }));
+      await client.batch(tagStatements, "write");
+      
       console.log("[DB] Seeding completed.");
     } else {
       console.log(`[DB] Database already contains ${count} items. Skipping seed.`);

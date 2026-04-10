@@ -5,6 +5,7 @@ import { fetchApi } from "../lib/api";
 import { Software, SoftwareCard } from "./SoftwareCard";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
+import { Image } from "./ui/Image";
 import { Textarea } from "./ui/textarea";
 import { Calendar, Download, Flame, Monitor, Smartphone, Apple, ArrowLeft, History, BookOpen, LayoutGrid, ChevronDown, ChevronUp, X, Star, MessageSquare, Send, Sparkles, Shield, Copy } from "lucide-react";
 import { toast } from "sonner";
@@ -12,6 +13,7 @@ import Markdown from "react-markdown";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuthStore } from "../store";
 import { aiService } from "../services/aiService";
+import { Helmet } from "react-helmet-async";
 
 export const SoftwareDetail: React.FC<{ id: number; onBack: () => void; onDownload: (id: number) => void }> = ({ id, onBack, onDownload }) => {
   const { lang } = useAppStore();
@@ -112,6 +114,11 @@ export const SoftwareDetail: React.FC<{ id: number; onBack: () => void; onDownlo
 
   return (
     <div className="space-y-8 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <Helmet>
+        <title>{software.name} - Software Hub</title>
+        <meta name="description" content={software.description || `Download ${software.name} ${software.version}`} />
+      </Helmet>
+      
       <Button variant="ghost" onClick={onBack} className="mb-4">
         <ArrowLeft className="mr-2 h-4 w-4" />
         {t.back_to_list}
@@ -122,7 +129,7 @@ export const SoftwareDetail: React.FC<{ id: number; onBack: () => void; onDownlo
         <div className="lg:col-span-2 space-y-8">
           <div className="flex flex-col md:flex-row gap-6 items-start">
             {software.screenshots && software.screenshots.length > 0 && (
-              <img 
+              <Image 
                 src={software.screenshots[0]} 
                 alt={software.name} 
                 className="w-full md:w-64 h-40 object-cover rounded-xl shadow-lg cursor-zoom-in hover:opacity-90 transition-opacity"
@@ -242,7 +249,7 @@ export const SoftwareDetail: React.FC<{ id: number; onBack: () => void; onDownlo
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {software.screenshots.map((src, i) => (
-                  <img 
+                  <Image 
                     key={i} 
                     src={src} 
                     alt={`Screenshot ${i+1}`} 
@@ -401,7 +408,7 @@ export const SoftwareDetail: React.FC<{ id: number; onBack: () => void; onDownlo
                     }}
                   >
                     {s.screenshots && s.screenshots.length > 0 && (
-                      <img src={s.screenshots[0]} className="w-20 h-14 object-cover rounded" referrerPolicy="no-referrer" />
+                      <Image src={s.screenshots[0]} className="w-20 h-14 object-cover rounded" referrerPolicy="no-referrer" />
                     )}
                     <div>
                       <h4 className="font-medium text-sm line-clamp-1">{s.name}</h4>
@@ -440,7 +447,7 @@ export const SoftwareDetail: React.FC<{ id: number; onBack: () => void; onDownlo
               >
                 <X className="h-6 w-6" />
               </Button>
-              <img
+              <Image
                 src={selectedScreenshot}
                 alt="Zoomed screenshot"
                 className="max-w-full max-h-[85vh] rounded-xl shadow-2xl border object-contain"

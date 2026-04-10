@@ -10,6 +10,7 @@ dotenv.config({ override: true });
 
 import { initDb } from "./server/db/index.js";
 import { startLinkCheckerTask } from "./server/services/linkChecker.js";
+import { apiLimiter } from "./server/middlewares/rateLimiter.js";
 import authRoutes from "./server/routes/auth.js";
 import softwareRoutes from "./server/routes/software.js";
 import favoritesRoutes from "./server/routes/favorites.js";
@@ -20,6 +21,8 @@ import rankingsRoutes from "./server/routes/rankings.js";
 import userRoutes from "./server/routes/user.js";
 import aiRoutes from "./server/routes/ai.js";
 import adminRoutes from "./server/routes/admin.js";
+import categoriesRoutes from "./server/routes/categories.js";
+
 // import { verifySignature } from "./server/middlewares/signature.js"; 
 // Note: verifySignature is available if you want to protect specific backend routes from external callers.
 
@@ -33,10 +36,12 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  app.set('trust proxy', 1);
   app.use(cors());
   app.use(express.json());
 
   // --- API Routes ---
+  app.use("/api", apiLimiter);
   app.use("/api/auth", authRoutes);
   app.use("/api/software", softwareRoutes);
   app.use("/api/favorites", favoritesRoutes);
@@ -47,6 +52,7 @@ async function startServer() {
   app.use("/api/user", userRoutes);
   app.use("/api/ai", aiRoutes);
   app.use("/api/admin", adminRoutes);
+  app.use("/api/categories", categoriesRoutes);
 
   // --- Vite Middleware ---
   if (process.env.NODE_ENV !== "production") {

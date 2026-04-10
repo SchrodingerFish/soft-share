@@ -4,6 +4,9 @@ import jwt from "jsonwebtoken";
 import db from "../db/index.js";
 import { authenticate, isAdmin, AuthRequest } from "../middlewares/auth.js";
 import { checkAllLinks } from "../services/linkChecker.js";
+import { actionLimiter } from "../middlewares/rateLimiter.js";
+import { validate } from "../middlewares/validate.js";
+import { softwareSchema } from "../schemas/index.js";
 
 const router = Router();
 const SECRET_KEY = process.env.SECRET_KEY || "default-secret-key";
@@ -170,7 +173,7 @@ router.get("/:id/hint", async (req, res) => {
 });
 
 // Verify Code and Get Download URL
-router.post("/:id/download", async (req, res) => {
+router.post("/:id/download", actionLimiter, async (req, res) => {
   try {
     const { code } = req.body;
     const id = parseInt(req.params.id);
@@ -222,7 +225,7 @@ router.post("/:id/download", async (req, res) => {
 });
 
 // Admin: Add Software
-router.post("/", authenticate, isAdmin, async (req, res) => {
+router.post("/", authenticate, isAdmin, validate(softwareSchema), async (req, res) => {
   try {
     const { name, version, platforms, category, size, update_date, description, screenshots, popularity, download_url, version_history, tutorial } = req.body;
     
@@ -252,7 +255,7 @@ router.post("/", authenticate, isAdmin, async (req, res) => {
 });
 
 // Admin: Update Software
-router.put("/:id", authenticate, isAdmin, async (req: AuthRequest, res: Response) => {
+router.put("/:id", authenticate, isAdmin, validate(softwareSchema), async (req: AuthRequest, res: Response) => {
   try {
     const { name, version, platforms, category, size, update_date, description, screenshots, popularity, download_url, version_history, tutorial } = req.body;
     const id = req.params.id;

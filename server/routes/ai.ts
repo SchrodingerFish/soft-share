@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { aiService, AIConfig } from "../services/aiService.js";
+import { aiLimiter } from "../middlewares/rateLimiter.js";
 
 const router = Router();
 
-router.post("/recommend", async (req, res) => {
+router.post("/recommend", aiLimiter, async (req, res) => {
   try {
     const { query, softwareList, config } = req.body;
     const result = await aiService.recommendSoftware(query, softwareList, config);
@@ -13,7 +14,7 @@ router.post("/recommend", async (req, res) => {
   }
 });
 
-router.post("/generate-details", async (req, res) => {
+router.post("/generate-details", aiLimiter, async (req, res) => {
   try {
     const { name, config } = req.body;
     const result = await aiService.generateSoftwareDetails(name, config);
@@ -23,7 +24,7 @@ router.post("/generate-details", async (req, res) => {
   }
 });
 
-router.post("/compare", async (req, res) => {
+router.post("/compare", aiLimiter, async (req, res) => {
   try {
     const { softwareA, softwareB, config } = req.body;
     const result = await aiService.compareSoftware(softwareA, softwareB, config);
@@ -33,7 +34,7 @@ router.post("/compare", async (req, res) => {
   }
 });
 
-router.post("/summarize", async (req, res) => {
+router.post("/summarize", aiLimiter, async (req, res) => {
   try {
     const { software, config } = req.body;
     const result = await aiService.summarizeSoftware(software, config);

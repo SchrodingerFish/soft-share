@@ -5,24 +5,34 @@ import { fetchApi } from "../lib/api";
 import { Software, SoftwareCard } from "./SoftwareCard";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { History, Bell, Download, CheckCircle, ArrowLeft, Trash2, CheckCheck, Settings, Cpu, User } from "lucide-react";
+import { History, Bell, Download, CheckCircle, ArrowLeft, Trash2, CheckCheck, Settings, Cpu, User, Lock, Image as ImageIcon, Heart, Send, Menu } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Input } from "./ui/input";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger as SheetTriggerBase } from "./ui/sheet";
 
 export const UserCenter: React.FC<{ onBack: () => void; onDetail: (id: number) => void; onDownload: (id: number) => void }> = ({ onBack, onDetail, onDownload }) => {
   const { lang, aiConfig, setAIConfig } = useAppStore();
   const { setUnreadCount, unreadCount, user, setUser } = useAuthStore();
   const t = translations[lang];
   
-  const [activeTab, setActiveTab] = useState<"profile" | "history" | "notifications" | "settings">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "history" | "favorites" | "submissions" | "notifications" | "settings">("profile");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [history, setHistory] = useState<any[]>([]);
+  const [favorites, setFavorites] = useState<any[]>([]);
+  const [submissions, setSubmissions] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [localAIConfig, setLocalAIConfig] = useState(aiConfig);
-  const [profileData, setProfileData] = useState({ username: user?.username || "", email: user?.email || "" });
+  const [profileData, setProfileData] = useState({ 
+    username: user?.username || "", 
+    email: user?.email || "",
+    avatar: user?.avatar || "",
+    password: "",
+    confirmPassword: ""
+  });
 
   const loadHistory = async () => {
     setLoading(true);
@@ -30,7 +40,31 @@ export const UserCenter: React.FC<{ onBack: () => void; onDetail: (id: number) =
       const res = await fetchApi<any[]>("/user/history");
       if (res.code === 0) setHistory(res.data);
     } catch (err) {
-      toast.error("Failed to load history");
+      toast.error(t.failed_load_history);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadFavorites = async () => {
+    setLoading(true);
+    try {
+      const res = await fetchApi<any[]>("/user/favorites");
+      if (res.code === 0) setFavorites(res.data);
+    } catch (err) {
+      toast.error(t.failed_load_favorites);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadSubmissions = async () => {
+    setLoading(true);
+    try {
+      const res = await fetchApi<any[]>("/user/submissions");
+      if (res.code === 0) setSubmissions(res.data);
+    } catch (err) {
+      toast.error(t.failed_load_submissions);
     } finally {
       setLoading(false);
     }
@@ -45,7 +79,7 @@ export const UserCenter: React.FC<{ onBack: () => void; onDetail: (id: number) =
         setUnreadCount(res.data.unreadCount);
       }
     } catch (err) {
-      toast.error("Failed to load notifications");
+      toast.error(t.failed_load_notifications);
     } finally {
       setLoading(false);
     }
@@ -53,6 +87,8 @@ export const UserCenter: React.FC<{ onBack: () => void; onDetail: (id: number) =
 
   useEffect(() => {
     if (activeTab === "history") loadHistory();
+    else if (activeTab === "favorites") loadFavorites();
+    else if (activeTab === "submissions") loadSubmissions();
     else if (activeTab === "notifications") loadNotifications();
     else setLoading(false);
   }, [activeTab]);
@@ -88,14 +124,25 @@ export const UserCenter: React.FC<{ onBack: () => void; onDetail: (id: number) =
   };
 
   const handleSaveProfile = async () => {
+    if (profileData.password && profileData.password !== profileData.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
     try {
       const res = await fetchApi("/user/profile", {
         method: "POST",
-        body: JSON.stringify(profileData)
+        body: JSON.stringify({
+          username: profileData.username,
+          email: profileData.email,
+          avatar: profileData.avatar,
+          password: profileData.password || undefined
+        })
       });
       if (res.code === 0) {
-        setUser({ ...user!, ...profileData });
-        toast.success(t.profile_saved);
+        setUser({ ...user!, username: profileData.username, email: profileData.email, avatar: profileData.avatar });
+        setProfileData({ ...profileData, password: "", confirmPassword: "" });
+        toast.success(t.profile_saved || "Profile updated successfully");
       } else {
         toast.error(res.message);
       }
@@ -119,65 +166,82 @@ export const UserCenter: React.FC<{ onBack: () => void; onDetail: (id: number) =
     }
   };
 
+  const menuItems: { id: string, label: string, icon: any, badge?: number }[] = [
+    { id: "profile", label: t.profile_settings || "Profile", icon: User },
+    { id: "history", label: t.download_history || "History", icon: History },
+    { id: "favorites", label: "Favorites", icon: Heart },
+    { id: "submissions", label: "Submissions", icon: Send },
+    { id: "notifications", label: t.notifications || "Notifications", icon: Bell, badge: unreadCount },
+    { id: "settings", label: t.ai_settings || "AI Settings", icon: Settings },
+  ];
+
+  const NavContent = () => (
+    <div className="flex flex-col gap-2">
+      {menuItems.map((item) => (
+        <Button
+          key={item.id}
+          variant={activeTab === item.id ? "secondary" : "ghost"}
+          className="justify-start w-full"
+          onClick={() => {
+            setActiveTab(item.id as any);
+            setIsMobileMenuOpen(false);
+          }}
+        >
+          <item.icon className="mr-2 h-4 w-4" />
+          {item.label}
+          {item.badge ? (
+            <span className="ml-auto bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">
+              {item.badge}
+            </span>
+          ) : null}
+        </Button>
+      ))}
+    </div>
+  );
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={onBack} className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            {t.back_to_list}
-          </Button>
-          <h2 className="text-2xl font-bold">{t.personal_center}</h2>
-        </div>
-        <div className="flex bg-muted p-1 rounded-xl">
-          <Button 
-            variant={activeTab === "profile" ? "secondary" : "ghost"} 
-            size="sm"
-            onClick={() => setActiveTab("profile")}
-            className="rounded-lg gap-2"
-          >
-            <User className="h-4 w-4" />
-            {t.profile_settings || "Profile"}
-          </Button>
-          <Button 
-            variant={activeTab === "history" ? "secondary" : "ghost"} 
-            size="sm"
-            onClick={() => setActiveTab("history")}
-            className="rounded-lg gap-2"
-          >
-            <History className="h-4 w-4" />
-            {t.download_history || "Download History"}
-          </Button>
-          <Button 
-            variant={activeTab === "notifications" ? "secondary" : "ghost"} 
-            size="sm"
-            onClick={() => setActiveTab("notifications")}
-            className="rounded-lg gap-2"
-          >
-            <Bell className="h-4 w-4" />
-            {t.notifications || "Notifications"}
-            {unreadCount > 0 && (
-              <span className="h-2 w-2 bg-red-500 rounded-full" />
-            )}
-          </Button>
-          <Button 
-            variant={activeTab === "settings" ? "secondary" : "ghost"} 
-            size="sm"
-            onClick={() => setActiveTab("settings")}
-            className="rounded-lg gap-2"
-          >
-            <Settings className="h-4 w-4" />
-            {t.ai_settings || "AI Settings"}
-          </Button>
-        </div>
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" onClick={onBack} className="gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          {t.back_to_list}
+        </Button>
       </div>
 
-      <div className="min-h-[400px]">
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      <div className="flex flex-col md:flex-row gap-6">
+        {/* Mobile Header & Drawer */}
+        <div className="md:hidden flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold">{t.personal_center}</h2>
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+            <SheetTriggerBase render={<Button variant="outline" size="icon" />}>
+              <Menu className="h-5 w-5" />
+            </SheetTriggerBase>
+            <SheetContent side="left" className="w-64">
+              <SheetHeader className="mb-6 text-left">
+                <SheetTitle>{t.personal_center}</SheetTitle>
+              </SheetHeader>
+              <NavContent />
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {/* Desktop Sidebar */}
+        <div className="hidden md:block w-64 shrink-0">
+          <div className="sticky top-6 space-y-6">
+            <h2 className="text-2xl font-bold px-2">{t.personal_center}</h2>
+            <div className="bg-muted/50 p-2 rounded-xl">
+              <NavContent />
+            </div>
           </div>
-        ) : (
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 min-w-0">
+          {loading ? (
+            <div className="flex justify-center py-20">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          ) : (
           <AnimatePresence mode="wait">
             {activeTab === "profile" ? (
               <motion.div 
@@ -185,35 +249,80 @@ export const UserCenter: React.FC<{ onBack: () => void; onDetail: (id: number) =
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="max-w-2xl mx-auto bg-card border rounded-2xl p-8 shadow-xl space-y-6"
+                className="max-w-2xl mx-auto bg-card border rounded-2xl p-8 shadow-xl space-y-8"
               >
                 <div className="flex items-center gap-3 text-primary mb-2">
                   <User className="h-6 w-6" />
                   <h3 className="text-xl font-bold">{t.profile_settings}</h3>
                 </div>
                 
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">{t.username}</label>
-                    <Input 
-                      value={profileData.username}
-                      onChange={(e) => setProfileData({...profileData, username: e.target.value})}
-                    />
+                <div className="flex flex-col md:flex-row gap-8">
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="w-32 h-32 rounded-full border-4 border-muted overflow-hidden bg-muted flex items-center justify-center">
+                      {profileData.avatar ? (
+                        <img src={profileData.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-16 h-16 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="w-full space-y-2">
+                      <label className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                        <ImageIcon className="w-3 h-3" /> Avatar URL
+                      </label>
+                      <Input 
+                        placeholder="https://example.com/avatar.png"
+                        value={profileData.avatar}
+                        onChange={(e) => setProfileData({...profileData, avatar: e.target.value})}
+                        className="text-xs"
+                      />
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">{t.email}</label>
-                    <Input 
-                      type="email"
-                      placeholder="your@email.com"
-                      value={profileData.email}
-                      onChange={(e) => setProfileData({...profileData, email: e.target.value})}
-                    />
-                  </div>
+                  <div className="flex-1 space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">{t.username}</label>
+                      <Input 
+                        value={profileData.username}
+                        onChange={(e) => setProfileData({...profileData, username: e.target.value})}
+                      />
+                    </div>
 
-                  <Button className="w-full mt-6" onClick={handleSaveProfile}>
-                    {t.save_profile}
-                  </Button>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">{t.email}</label>
+                      <Input 
+                        type="email"
+                        placeholder="your@email.com"
+                        value={profileData.email}
+                        onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                      />
+                    </div>
+
+                    <div className="pt-4 border-t space-y-4">
+                      <h4 className="text-sm font-bold flex items-center gap-2">
+                        <Lock className="w-4 h-4" /> Change Password
+                      </h4>
+                      <div className="space-y-2">
+                        <Input 
+                          type="password"
+                          placeholder="New Password (leave blank to keep current)"
+                          value={profileData.password}
+                          onChange={(e) => setProfileData({...profileData, password: e.target.value})}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Input 
+                          type="password"
+                          placeholder="Confirm New Password"
+                          value={profileData.confirmPassword}
+                          onChange={(e) => setProfileData({...profileData, confirmPassword: e.target.value})}
+                        />
+                      </div>
+                    </div>
+
+                    <Button className="w-full mt-6" onClick={handleSaveProfile}>
+                      {t.save_profile}
+                    </Button>
+                  </div>
                 </div>
               </motion.div>
             ) : activeTab === "history" ? (
@@ -239,6 +348,69 @@ export const UserCenter: React.FC<{ onBack: () => void; onDetail: (id: number) =
                       </div>
                     </div>
                   ))
+                )}
+              </motion.div>
+            ) : activeTab === "favorites" ? (
+              <motion.div 
+                key="favorites"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              >
+                {favorites.length === 0 ? (
+                  <div className="col-span-full text-center py-20 text-muted-foreground italic">
+                    No favorites yet
+                  </div>
+                ) : (
+                  favorites.map((item) => (
+                    <div key={item.id} onClick={() => onDetail(item.id)} className="cursor-pointer relative group">
+                      <SoftwareCard software={item} onDownload={onDownload} />
+                    </div>
+                  ))
+                )}
+              </motion.div>
+            ) : activeTab === "submissions" ? (
+              <motion.div 
+                key="submissions"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="space-y-4"
+              >
+                {submissions.length === 0 ? (
+                  <div className="text-center py-20 text-muted-foreground italic">
+                    No submissions yet
+                  </div>
+                ) : (
+                  <div className="border rounded-lg overflow-hidden bg-card">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted/50 border-b">
+                        <tr>
+                          <th className="px-4 py-3 text-left font-medium">Software Name</th>
+                          <th className="px-4 py-3 text-left font-medium">Version</th>
+                          <th className="px-4 py-3 text-left font-medium">Status</th>
+                          <th className="px-4 py-3 text-left font-medium">Date</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {submissions.map((s) => (
+                          <tr key={s.id} className="hover:bg-muted/30 transition-colors">
+                            <td className="px-4 py-3 font-medium">{s.name}</td>
+                            <td className="px-4 py-3 text-muted-foreground">{s.version}</td>
+                            <td className="px-4 py-3">
+                              <Badge variant={s.status === 'approved' ? 'default' : s.status === 'rejected' ? 'destructive' : 'secondary'}>
+                                {s.status}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground">
+                              {new Date(s.created_at).toLocaleDateString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </motion.div>
             ) : activeTab === "notifications" ? (
@@ -374,7 +546,8 @@ export const UserCenter: React.FC<{ onBack: () => void; onDetail: (id: number) =
               </motion.div>
             )}
           </AnimatePresence>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

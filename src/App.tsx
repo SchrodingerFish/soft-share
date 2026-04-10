@@ -1,9 +1,12 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAppStore, useAuthStore } from "./store";
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useDebounce } from './lib/hooks/useDebounce';
 import { translations } from "./i18n";
 import { fetchApi } from "./lib/api";
 import { Software, SoftwareCard } from "./components/SoftwareCard";
+import { SoftwareSkeleton } from "./components/SoftwareSkeleton";
 import { SoftwareDetail } from "./components/SoftwareDetail";
 import { CollectionsView } from "./components/CollectionsView";
 import { AdminDashboard } from "./components/AdminDashboard";
@@ -26,7 +29,6 @@ import { Moon, Sun, Globe, Search, User, LogOut, Heart, Filter, Sparkles, Scale,
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner";
 
-const CATEGORIES = ["Dev", "System", "Download", "Media", "Productivity", "Design"];
 const PLATFORMS = ["Windows", "macOS", "Android"];
 
 const SoftwareGrid = React.memo(({ 
@@ -36,7 +38,8 @@ const SoftwareGrid = React.memo(({
   onDetail,
   onSelect,
   selectedIds,
-  noDataText 
+  noDataText,
+  isLoading
 }: { 
   items: Software[], 
   showFavorites: boolean, 
@@ -44,7 +47,8 @@ const SoftwareGrid = React.memo(({
   onDetail?: (id: number) => void,
   onSelect?: (id: number) => void,
   selectedIds?: number[],
-  noDataText: string
+  noDataText: string,
+  isLoading?: boolean
 }) => {
   const favoriteIds = useAuthStore(state => state.favoriteIds);
   
@@ -52,6 +56,14 @@ const SoftwareGrid = React.memo(({
     if (!showFavorites) return items;
     return items.filter(s => favoriteIds.includes(s.id));
   }, [items, showFavorites, favoriteIds]);
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {Array.from({ length: 8 }).map((_, i) => <SoftwareSkeleton key={i} />)}
+      </div>
+    );
+  }
 
   if (displayedItems.length === 0) {
     return (
@@ -89,9 +101,11 @@ export default function App() {
   const logout = useAuthStore(state => state.logout);
   const setFavoriteIds = useAuthStore(state => state.setFavoriteIds);
   const unreadCount = useAuthStore(state => state.unreadCount);
+  const setCategories = useAppStore(state => state.setCategories);
   const setUnreadCount = useAuthStore(state => state.setUnreadCount);
 
   const t = translations[lang];
+  const queryClient = useQueryClient();
 
   const [softwareList, setSoftwareList] = useState<Software[]>([]);
   const [total, setTotal] = useState(0);
@@ -132,6 +146,21 @@ export default function App() {
     setLocalSearch(search);
   }, [search]);
 
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const res = await fetchApi<{ id: number; name: string; description: string }[]>("/categories");
+      if (res.code !== 0) throw new Error(res.message || "Failed to fetch categories");
+      return res.data;
+    }
+  });
+
+  useEffect(() => {
+    if (categories.length > 0) {
+      setCategories(categories);
+    }
+  }, [categories, setCategories]);
+
   useEffect(() => {
     if (user) {
       fetchApi<Software[]>("/favorites").then(res => {
@@ -163,63 +192,52 @@ export default function App() {
     });
   }, [setSearchParams]);
 
+  const debouncedSearch = useDebounce(localSearch, 500);
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (localSearch !== search) {
-        updateParams({ search: localSearch, page: "1", favorites: null });
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [localSearch, search, updateParams]);
+    if (debouncedSearch !== search) {
+      updateParams({ search: debouncedSearch, page: "1", favorites: null });
+    }
+  }, [debouncedSearch, search, updateParams]);
 
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [downloadModalOpen, setDownloadModalOpen] = useState(false);
   const [selectedSoftwareId, setSelectedSoftwareId] = useState<number | null>(null);
 
-  const loadData = async () => {
-    if (showAdmin || showCollections || detailId || showAI || showRankings || showSubmit || showUserCenter || compareIds.length === 2) return;
-    try {
+  const { data: softwareData, isLoading: isSoftwareLoading } = useQuery({
+    queryKey: ['software', page, limit, search, category, platform, showFavorites, user],
+    queryFn: async () => {
       if (showFavorites) {
-        if (!user) return;
+        if (!user) return { items: [], total: 0 };
         const res = await fetchApi<Software[]>("/favorites");
-        if (res.code === 0) {
-          setSoftwareList(res.data);
-          setTotal(res.data.length);
-        } else {
-          toast.error(res.message || "Failed to load favorites");
-        }
+        if (res.code !== 0) throw new Error(res.message || "Failed to load favorites");
+        return { items: res.data, total: res.data.length };
       } else {
         const res = await fetchApi<{ items: Software[], total: number }>(
           `/software?page=${page}&limit=${limit}&search=${search}&category=${category}&platform=${platform}`
         );
-        if (res.code === 0) {
-          setSoftwareList(res.data.items);
-          setTotal(res.data.total);
-        } else {
-          toast.error(res.message || "Failed to load software list");
-        }
+        if (res.code !== 0) throw new Error(res.message || "Failed to load software list");
+        return res.data;
       }
-    } catch (err) {
-      toast.error("An unexpected error occurred while loading data");
-    }
-  };
+    },
+    enabled: !showAdmin && !showCollections && !detailId && !showAI && !showRankings && !showSubmit && !showUserCenter && compareIds.length < 2
+  });
 
   useEffect(() => {
-    // Only reload data when search/filters/page change, or when toggling showFavorites
-    // We remove 'user' and 'favoriteIds' from here to prevent re-fetching the whole list on every toggle
-    if (!showAdmin && !showCollections && !detailId && !showAI && !showRankings && !showSubmit && !showUserCenter && compareIds.length < 2) {
-      loadData();
+    if (softwareData) {
+      setSoftwareList(softwareData.items);
+      setTotal(softwareData.total);
     }
-  }, [page, limit, search, category, platform, showFavorites, showAdmin, showCollections, detailId, showAI, showRankings, showSubmit, showUserCenter, compareIds.length]);
+  }, [softwareData]);
 
   const totalPages = Math.ceil(total / limit) || 1;
 
   // Sync softwareList with favorites when in "showFavorites" mode
   useEffect(() => {
     if (showFavorites && user && softwareList.length === 0) {
-      loadData();
+      queryClient.invalidateQueries({ queryKey: ['favorites'] });
     }
-  }, [showFavorites, user]);
+  }, [showFavorites, user, softwareList.length, queryClient]);
 
   const handleDownload = useCallback((id: number) => {
     setSelectedSoftwareId(id);
@@ -262,9 +280,9 @@ export default function App() {
           <Button variant={category === "" ? "default" : "ghost"} className="w-full justify-start" onClick={() => updateParams({ category: null, page: "1" })}>
             {t.all}
           </Button>
-          {CATEGORIES.map(c => (
-            <Button key={c} variant={category === c ? "default" : "ghost"} className="w-full justify-start" onClick={() => updateParams({ category: c, page: "1" })}>
-              {c}
+          {categories.map(c => (
+            <Button key={c.name} variant={category === c.name ? "default" : "ghost"} className="w-full justify-start" onClick={() => updateParams({ category: c.name, page: "1" })}>
+              {c.name}
             </Button>
           ))}
         </div>
@@ -436,7 +454,7 @@ export default function App() {
                     </Sheet>
                   )}
                   <h2 className="text-2xl font-bold">
-                    {showFavorites ? t.favorites : (category || platform || search ? "Search Results" : "All Software")}
+                    {showFavorites ? t.favorites : (category || platform || search ? t.search_results : t.all_software)}
                   </h2>
                 </div>
                 <div className="flex items-center gap-4">
@@ -477,6 +495,7 @@ export default function App() {
                 onSelect={handleSelectForCompare}
                 selectedIds={selectedForCompare}
                 noDataText={t.no_data}
+                isLoading={isSoftwareLoading}
               />
 
               {!showFavorites && !category && !platform && !search && page === 1 && (
@@ -561,12 +580,12 @@ export default function App() {
         <div className="container mx-auto px-4 py-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-foreground">{t.app_name}</span>
-            <span>&copy; {new Date().getFullYear()} All rights reserved.</span>
+            <span>&copy; {new Date().getFullYear()} {t.all_rights_reserved}</span>
           </div>
           <div className="flex gap-4">
-            <a href="#" className="hover:text-foreground transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-foreground transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-foreground transition-colors">Contact Us</a>
+            <a href="#" className="hover:text-foreground transition-colors">{t.privacy_policy}</a>
+            <a href="#" className="hover:text-foreground transition-colors">{t.terms_of_service}</a>
+            <a href="#" className="hover:text-foreground transition-colors">{t.contact_us}</a>
           </div>
         </div>
       </footer>

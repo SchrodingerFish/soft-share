@@ -2,26 +2,70 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="00a13036-d33e-46d6-91cc-000a216ae9ea" name="更改" comment="Add support for multiple database configurations and enhance pagination component&#10;&#10;- Introduced SQLite and PostgreSQL support in the application&#10;- Updated environment configuration in .env.example&#10;- Enhanced pagination component with first and last page navigation&#10;- Improved error handling in user registration API&#10;- Updated README to reflect new database options and setup instructions">
+      <change beforePath="$PROJECT_DIR$/.dockerignore" beforeDir="false" afterPath="$PROJECT_DIR$/.dockerignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data.db" beforeDir="false" afterPath="$PROJECT_DIR$/data.db" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components.json" beforeDir="false" afterPath="$PROJECT_DIR$/components.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fix-imports.cjs" beforeDir="false" afterPath="$PROJECT_DIR$/fix-imports.cjs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/metadata.json" beforeDir="false" afterPath="$PROJECT_DIR$/metadata.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/db/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/db/index.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/middlewares/auth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/middlewares/auth.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/middlewares/signature.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/middlewares/signature.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/routes/admin.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/admin.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/routes/ai.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/ai.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/routes/auth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/auth.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/routes/collections.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/collections.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/routes/comments.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/comments.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/routes/favorites.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/favorites.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/routes/rankings.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/rankings.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/routes/software.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/software.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/routes/submissions.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/submissions.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/routes/user.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/user.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/services/aiService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/services/aiService.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/services/linkChecker.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/services/linkChecker.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/utils/externalApiClient.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/utils/externalApiClient.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/AIAssistant.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/AIAssistant.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/AdminDashboard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/AdminDashboard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/AuthModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/AuthModal.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/CollectionsView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/CollectionsView.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/DownloadModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/DownloadModal.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Rankings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Rankings.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/Recommendations.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Recommendations.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/SoftwareCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/SoftwareCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/SoftwareComparison.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/SoftwareComparison.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/SoftwareDetail.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/SoftwareDetail.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/SoftwareSubmission.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/SoftwareSubmission.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/UserCenter.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/UserCenter.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ui/badge.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/badge.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ui/button.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/button.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ui/card.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/card.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ui/dialog.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/dialog.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ui/dropdown-menu.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/dropdown-menu.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ui/input.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/input.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/ui/pagination.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/pagination.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ui/select.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/select.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ui/separator.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/separator.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ui/sheet.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/sheet.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ui/sonner.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/sonner.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ui/tabs.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/tabs.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ui/textarea.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/textarea.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/i18n.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/i18n.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/api.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/lib/utils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/lib/utils.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/services/aiService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/aiService.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/store.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/store.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tsconfig.json" beforeDir="false" afterPath="$PROJECT_DIR$/tsconfig.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vite.config.ts" beforeDir="false" afterPath="$PROJECT_DIR$/vite.config.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,7 +77,15 @@
       <entry key="_G:/Projects/WebStorm/soft-share" value="3C4uHNmRoHB0CAlEF8dsiAnE5Sj" />
     </persistenceIdMap>
   </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="88" />
+  </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="master" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
@@ -42,12 +94,41 @@
     &quot;assignee&quot;: &quot;SchrodingerFish&quot;
   }
 }</component>
+  <component name="GitToolBoxStore">
+    <option name="recentBranches">
+      <RecentBranches>
+        <option name="branchesForRepo">
+          <list>
+            <RecentBranchesForRepo>
+              <option name="branches">
+                <list>
+                  <RecentBranch>
+                    <option name="branchName" value="dev" />
+                    <option name="lastUsedInstant" value="1775802655" />
+                  </RecentBranch>
+                  <RecentBranch>
+                    <option name="branchName" value="master" />
+                    <option name="lastUsedInstant" value="1775802654" />
+                  </RecentBranch>
+                </list>
+              </option>
+              <option name="repositoryRootUrl" value="file://$PROJECT_DIR$" />
+            </RecentBranchesForRepo>
+          </list>
+        </option>
+      </RecentBranches>
+    </option>
+  </component>
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
     &quot;url&quot;: &quot;https://github.com/SchrodingerFish/soft-share.git&quot;,
     &quot;accountId&quot;: &quot;d479ba58-b766-4ac8-88ab-922c79d77786&quot;
   }
 }</component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 8,
   &quot;fromUser&quot;: false
@@ -57,30 +138,31 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
-    &quot;last_opened_file_path&quot;: &quot;G:/Projects/WebStorm/softshare&quot;,
-    &quot;nodejs_interpreter_path&quot;: &quot;node&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;G:\\Tools\\Nodejs\\nvm4w\\nodejs\\npm.cmd&quot;,
-    &quot;npm.dev.executor&quot;: &quot;Run&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;GrepConsole&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;G:\\Projects\\WebStorm\\softshare\\node_modules\\typescript\\lib&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "dev",
+    "ignore.virus.scanning.warn.message": "true",
+    "javascript.preferred.runtime.type.id": "node",
+    "last_opened_file_path": "G:/Projects/WebStorm/soft-share",
+    "nodejs_interpreter_path": "node",
+    "nodejs_package_manager_path": "G:\\Tools\\Nodejs\\nvm4w\\nodejs\\npm.cmd",
+    "npm.dev.executor": "Run",
+    "settings.editor.selected.configurable": "GrepConsole",
+    "ts.external.directory.path": "G:\\Projects\\WebStorm\\soft-share\\node_modules\\typescript\\lib",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="G:\Projects\WebStorm\softshare" />
       <recent name="G:\Projects\WebStorm\soft-share" />
+      <recent name="G:\Projects\WebStorm\softshare" />
     </key>
   </component>
   <component name="RunManager">
@@ -117,6 +199,7 @@
       <workItem from="1752126260374" duration="37000" />
       <workItem from="1775657077806" duration="1232000" />
       <workItem from="1775659288140" duration="2355000" />
+      <workItem from="1775802646907" duration="6315000" />
     </task>
     <task id="LOCAL-00001" summary="Add Turso database support and enhance error handling in API calls&#10;&#10;- Introduced Turso database configuration in .env.example&#10;- Updated API routes to use async/await and improved error handling&#10;- Enhanced favorite management in the software card component&#10;- Added Docker support with Dockerfile and docker-compose.yml&#10;- Updated README to reflect database changes and setup instructions">
       <option name="closed" value="true" />

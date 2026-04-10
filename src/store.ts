@@ -1,16 +1,16 @@
 import { create } from 'zustand';
 
 interface AuthState {
-  user: { id: number; username: string; role: string; email?: string; is_paid?: number | boolean } | null;
+  user: { id: number; username: string; role: string; email?: string; is_paid?: number | boolean; avatar?: string } | null;
   token: string | null;
   favoriteIds: number[];
   unreadCount: number;
-  login: (user: { id: number; username: string; role: string; email?: string; is_paid?: number | boolean }, token: string) => void;
+  login: (user: { id: number; username: string; role: string; email?: string; is_paid?: number | boolean; avatar?: string }, token: string) => void;
   logout: () => void;
   setFavoriteIds: (ids: number[]) => void;
   toggleFavoriteId: (id: number) => void;
   setUnreadCount: (count: number) => void;
-  setUser: (user: { id: number; username: string; role: string; email?: string; is_paid?: number | boolean }) => void;
+  setUser: (user: { id: number; username: string; role: string; email?: string; is_paid?: number | boolean; avatar?: string }) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -54,9 +54,11 @@ interface AppState {
   theme: 'light' | 'dark';
   lang: 'zh' | 'en';
   aiConfig: AIConfig;
+  categories: { id: number; name: string; description: string }[];
   setTheme: (theme: 'light' | 'dark') => void;
   setLang: (lang: 'zh' | 'en') => void;
   setAIConfig: (config: AIConfig) => void;
+  setCategories: (categories: { id: number; name: string; description: string }[]) => void;
 }
 
 export const useAppStore = create<AppState>((set) => {
@@ -74,6 +76,7 @@ export const useAppStore = create<AppState>((set) => {
     theme: savedTheme,
     lang: savedLang,
     aiConfig: savedAIConfig,
+    categories: [],
     setTheme: (theme) => {
       localStorage.setItem('theme', theme);
       if (theme === 'dark') {
@@ -91,5 +94,6 @@ export const useAppStore = create<AppState>((set) => {
       localStorage.setItem('aiConfig', JSON.stringify(aiConfig));
       set({ aiConfig });
     },
+    setCategories: (categories) => set({ categories }),
   };
 });

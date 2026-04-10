@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
+import { Image } from "./ui/Image";
 import { Download, Heart, Monitor, Smartphone, Apple, Calendar, Flame, Copy, Check } from "lucide-react";
 import { useAppStore, useAuthStore } from "../store";
 import { translations } from "../i18n";
@@ -27,6 +28,7 @@ export interface Software {
   tutorial?: string;
   verification_code?: string;
   related?: Software[];
+  tags?: { name: string; color: string }[];
 }
 
 export const SoftwareCard = React.memo(({ software, onDownload }: { software: Software; onDownload: (id: number) => void }) => {
@@ -94,9 +96,12 @@ export const SoftwareCard = React.memo(({ software, onDownload }: { software: So
         </div>
       )}
       {software.screenshots && software.screenshots.length > 0 && (
-        <div className="h-40 w-full overflow-hidden bg-muted">
-          <img src={software.screenshots[0]} alt={software.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-        </div>
+        <Image 
+          src={software.screenshots[0]} 
+          alt={software.name} 
+          className="h-40 w-full object-cover" 
+          referrerPolicy="no-referrer" 
+        />
       )}
       <CardHeader className="flex-none">
         <div className="flex justify-between items-start">
@@ -112,7 +117,7 @@ export const SoftwareCard = React.memo(({ software, onDownload }: { software: So
             <CardTitle className="text-xl leading-tight">{software.name}</CardTitle>
             {software.link_status === 'broken' && (
               <Badge variant="destructive" className="w-max text-[10px] py-0 px-1.5">
-                Link Broken
+                {t.link_broken}
               </Badge>
             )}
             <CardDescription className="flex items-center gap-2 flex-wrap">
@@ -138,6 +143,11 @@ export const SoftwareCard = React.memo(({ software, onDownload }: { software: So
             <Badge key={p} variant="outline" className="flex items-center gap-1">
               <PlatformIcon platform={p} />
               {p}
+            </Badge>
+          ))}
+          {software.tags && software.tags.map(tag => (
+            <Badge key={tag.name} variant="outline" style={{ borderColor: tag.color, color: tag.color }}>
+              {tag.name}
             </Badge>
           ))}
         </div>

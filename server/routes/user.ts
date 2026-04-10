@@ -1,6 +1,8 @@
 import { Router } from "express";
 import db from "../db/index.js";
 import { authenticate } from "../middlewares/auth.js";
+import { validate } from "../middlewares/validate.js";
+import { profileSchema } from "../schemas/index.js";
 
 const router = Router();
 
@@ -180,22 +182,81 @@ router.delete("/notifications/:id", authenticate, async (req, res) => {
 });
 
 // Update Profile
-router.post("/profile", authenticate, async (req, res) => {
+router.post("/profile", authenticate, validate(profileSchema), async (req, res) => {
   try {
     const userId = (req as any).user.id;
-    const { username, email } = req.body;
+    const { username, email, avatar, password } = req.body;
     
     if (!username) {
       res.json({ code: 400, message: "Username is required" });
       return;
     }
 
-    await db.execute({
-      sql: "UPDATE users SET username = ?, email = ? WHERE id = ?",
-      args: [username, email || null, userId]
-    });
+    if (password) {
+      // If password is provided, hash it and update
+      const bcrypt = await import("bcryptjs");
+      const hashedPassword = await bcrypt.default.hash(password, 10);
+      await db.execute({
+        sql: "UPDATE users SET username = ?, email = ?, avatar = ?, password = ? WHERE id = ?",
+        args: [username, email || null, avatar || null, hashedPassword, userId]
+      });
+    } else {
+      await db.execute({
+        sql: "UPDATE users SET username = ?, email = ?, avatar = ? WHERE id = ?",
+        args: [username, email || null, avatar || null, userId]
+      });
+    }
 
     res.json({ code: 0, message: "success" });
+  } catch (err: any) {
+    res.json({ code: 500, message: err.message });
+  }
+});
+
+// Get User Favorites
+router.get("/favorites", authenticate, async (req, res) => {
+  try {
+    const userId = (req as any).user.id;
+    const result = await db.execute({
+      sql: `SELECT s.* 
+            FROM favorites f 
+            JOIN software s ON f.software_id = s.id 
+            WHERE f.user_id = ? 
+            ORDER BY f.created_at DESC`,
+      args: [userId]
+    });
+
+    const parseJson = (str: string | null, fallback: any) => {
+      if (!str) return fallback;
+      try {
+        return JSON.parse(str);
+      } catch (e) {
+        return fallback;
+      }
+    };
+
+    const rows = result.rows.map((row: any) => ({
+      ...row,
+      platforms: parseJson(row.platforms, []),
+      screenshots: parseJson(row.screenshots, [])
+    }));
+
+    res.json({ code: 0, message: "success", data: rows });
+  } catch (err: any) {
+    res.json({ code: 500, message: err.message });
+  }
+});
+
+// Get User Submissions
+router.get("/submissions", authenticate, async (req, res) => {
+  try {
+    const userId = (req as any).user.id;
+    const result = await db.execute({
+      sql: `SELECT * FROM submissions WHERE user_id = ? ORDER BY created_at DESC`,
+      args: [userId]
+    });
+
+    res.json({ code: 0, message: "success", data: result.rows });
   } catch (err: any) {
     res.json({ code: 500, message: err.message });
   }

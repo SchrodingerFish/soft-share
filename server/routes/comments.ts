@@ -1,6 +1,9 @@
 import { Router } from "express";
 import db from "../db/index.js";
 import { authenticate } from "../middlewares/auth.js";
+import { actionLimiter } from "../middlewares/rateLimiter.js";
+import { validate } from "../middlewares/validate.js";
+import { commentSchema } from "../schemas/index.js";
 
 const router = Router();
 
@@ -22,7 +25,7 @@ router.get("/:softwareId", async (req, res) => {
 });
 
 // Add a comment
-router.post("/", authenticate, async (req: any, res) => {
+router.post("/", authenticate, actionLimiter, validate(commentSchema), async (req: any, res) => {
   try {
     const { software_id, rating, content } = req.body;
     const user_id = req.user.id;
