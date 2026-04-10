@@ -24,13 +24,13 @@ export function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     });
 
     if (res.code === 0) {
-      toast.success(isLogin ? "Login successful" : "Registration successful");
+      toast.success(isLogin ? t.login_successful : t.registration_successful);
       if (isLogin) {
         login(res.data.user, res.data.token);
       } else {
         // Auto login after register for simplicity, or just switch to login
         setIsLogin(true);
-        toast.info("Please login now");
+        toast.info(t.please_login_now);
         return;
       }
       onClose();

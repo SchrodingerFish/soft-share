@@ -2,17 +2,16 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import db from "../db/index.js";
+import { authLimiter } from "../middlewares/rateLimiter.js";
+import { validate } from "../middlewares/validate.js";
+import { registerSchema, loginSchema } from "../schemas/index.js";
 
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || "super-secret-key-for-dev";
 
 // Register
-router.post("/register", async (req, res) => {
+router.post("/register", authLimiter, validate(registerSchema), async (req, res) => {
   const { username, password } = req.body;
-  if (!username || !password) {
-    res.json({ code: 400, message: "Username and password required" });
-    return;
-  }
   
   try {
     // Check if this is the first user
@@ -45,7 +44,7 @@ router.post("/register", async (req, res) => {
 });
 
 // Login
-router.post("/login", async (req, res) => {
+router.post("/login", authLimiter, validate(loginSchema), async (req, res) => {
   const { username, password } = req.body;
   
   try {

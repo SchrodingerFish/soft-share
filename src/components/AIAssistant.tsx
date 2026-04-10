@@ -17,6 +17,7 @@ export const AIAssistant: React.FC<{ onDownload: (id: number) => void }> = ({ on
   
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{
     recommendation: string;
     softwareIds: number[];
@@ -28,6 +29,8 @@ export const AIAssistant: React.FC<{ onDownload: (id: number) => void }> = ({ on
     if (!query.trim()) return;
     
     setLoading(true);
+    setError(null);
+    setResult(null);
     try {
       // 1. Get all software for context
       const allRes = await fetchApi<{ items: Software[] }>("/software?limit=100");
@@ -41,7 +44,7 @@ export const AIAssistant: React.FC<{ onDownload: (id: number) => void }> = ({ on
       
       setResult({ ...aiResult, recommendedSoftware });
     } catch (err: any) {
-      toast.error(err.message || "AI assistant is currently unavailable");
+      setError(err.message || "AI assistant is currently unavailable. Please check your API key settings or try again later.");
       console.error(err);
     } finally {
       setLoading(false);
@@ -83,8 +86,46 @@ export const AIAssistant: React.FC<{ onDownload: (id: number) => void }> = ({ on
       </div>
 
       <AnimatePresence mode="wait">
-        {result && (
+        {loading && (
           <motion.div 
+            key="loading"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="flex flex-col items-center justify-center py-16 space-y-6"
+          >
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full blur-xl bg-primary/30 animate-pulse"></div>
+              <Loader2 className="h-16 w-16 animate-spin text-primary relative z-10" />
+            </div>
+            <div className="space-y-2 text-center">
+              <h3 className="text-xl font-semibold text-foreground">AI is analyzing your request</h3>
+              <p className="text-muted-foreground animate-pulse">Searching through our software database to find the perfect match...</p>
+            </div>
+          </motion.div>
+        )}
+
+        {error && !loading && (
+          <motion.div 
+            key="error"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="bg-destructive/10 text-destructive p-8 rounded-2xl border border-destructive/20 flex flex-col items-center text-center space-y-4 max-w-2xl mx-auto"
+          >
+            <div className="bg-destructive/20 p-4 rounded-full">
+              <Bot className="h-8 w-8" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-xl font-bold">Oops! Something went wrong</h3>
+              <p className="text-destructive/80">{error}</p>
+            </div>
+          </motion.div>
+        )}
+
+        {result && !loading && (
+          <motion.div 
+            key="result"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}

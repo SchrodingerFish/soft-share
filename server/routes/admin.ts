@@ -60,4 +60,54 @@ router.post("/users/:id/role", authenticate, isAdmin, async (req, res) => {
   }
 });
 
+// --- Tags Management ---
+router.get("/tags", async (req, res) => {
+  try {
+    const result = await db.execute("SELECT * FROM tags ORDER BY id ASC");
+    res.json({ code: 0, message: "success", data: result.rows });
+  } catch (err: any) {
+    res.json({ code: 500, message: err.message });
+  }
+});
+
+router.post("/tags", authenticate, isAdmin, async (req, res) => {
+  try {
+    const { name, color } = req.body;
+    await db.execute({
+      sql: "INSERT INTO tags (name, color) VALUES (?, ?)",
+      args: [name, color || "gray"]
+    });
+    res.json({ code: 0, message: "success" });
+  } catch (err: any) {
+    res.json({ code: 500, message: err.message });
+  }
+});
+
+router.put("/tags/:id", authenticate, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, color } = req.body;
+    await db.execute({
+      sql: "UPDATE tags SET name = ?, color = ? WHERE id = ?",
+      args: [name, color || "gray", id]
+    });
+    res.json({ code: 0, message: "success" });
+  } catch (err: any) {
+    res.json({ code: 500, message: err.message });
+  }
+});
+
+router.delete("/tags/:id", authenticate, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await db.execute({
+      sql: "DELETE FROM tags WHERE id = ?",
+      args: [id]
+    });
+    res.json({ code: 0, message: "success" });
+  } catch (err: any) {
+    res.json({ code: 500, message: err.message });
+  }
+});
+
 export default router;

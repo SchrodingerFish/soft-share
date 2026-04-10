@@ -1,11 +1,14 @@
 import { Router } from "express";
 import db from "../db/index.js";
 import { authenticate, isAdmin } from "../middlewares/auth.js";
+import { actionLimiter } from "../middlewares/rateLimiter.js";
+import { validate } from "../middlewares/validate.js";
+import { submissionSchema } from "../schemas/index.js";
 
 const router = Router();
 
 // Submit a software
-router.post("/", authenticate, async (req: any, res) => {
+router.post("/", authenticate, actionLimiter, validate(submissionSchema), async (req: any, res) => {
   try {
     const { name, version, platforms, category, size, description, download_url } = req.body;
     const user_id = req.user.id;
