@@ -4,6 +4,7 @@ import cors from "cors";
 import path from "path";
 import fs from "fs";
 import dotenv from "dotenv";
+import { createServer } from "http";
 
 // Load .env file with override: true to prioritize local .env over system environment variables
 dotenv.config({ override: true });
@@ -22,6 +23,7 @@ import userRoutes from "./server/routes/user.js";
 import aiRoutes from "./server/routes/ai.js";
 import adminRoutes from "./server/routes/admin.js";
 import categoriesRoutes from "./server/routes/categories.js";
+import { initSocket } from "./server/socket.js";
 
 // import { verifySignature } from "./server/middlewares/signature.js"; 
 // Note: verifySignature is available if you want to protect specific backend routes from external callers.
@@ -35,6 +37,10 @@ async function startServer() {
 
   const app = express();
   const PORT = 3000;
+  const httpServer = createServer(app);
+  
+  // Initialize Socket.io
+  initSocket(httpServer);
 
   app.set('trust proxy', 1);
   app.use(cors());
@@ -54,6 +60,11 @@ async function startServer() {
   app.use("/api/admin", adminRoutes);
   app.use("/api/categories", categoriesRoutes);
 
+  // Catch-all for non-existent API routes to prevent SPA fallback
+  app.use("/api", (req, res) => {
+    res.status(404).json({ code: 404, message: `API route not found: ${req.originalUrl}` });
+  });
+
   // --- Vite Middleware ---
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -69,7 +80,7 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
+  httpServer.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }

@@ -15,7 +15,12 @@ import { useAuthStore } from "../store";
 import { aiService } from "../services/aiService";
 import { Helmet } from "react-helmet-async";
 
-export const SoftwareDetail: React.FC<{ id: number; onBack: () => void; onDownload: (id: number) => void }> = ({ id, onBack, onDownload }) => {
+export const SoftwareDetail: React.FC<{ 
+  id: number; 
+  onBack: () => void; 
+  onDownload: (id: number) => void;
+  onDetail: (id: number) => void;
+}> = ({ id, onBack, onDownload, onDetail }) => {
   const { lang } = useAppStore();
   const { user } = useAuthStore();
   const t = translations[lang];
@@ -143,7 +148,14 @@ export const SoftwareDetail: React.FC<{ id: number; onBack: () => void; onDownlo
                   <h2 className="text-3xl font-bold">{software.name}</h2>
                   <div className="flex items-center gap-2 mt-2 flex-wrap">
                     <Badge variant="secondary">{software.version}</Badge>
-                    <Badge variant="outline">{software.category}</Badge>
+                    <Badge variant="outline">
+                      {lang === 'zh' ? software.category : (software.category_en || software.category)}
+                    </Badge>
+                    {Array.isArray(software.tags) && software.tags.map(tag => (
+                      <Badge key={tag.name} variant="outline" style={{ borderColor: tag.color, color: tag.color }}>
+                        {lang === 'zh' ? tag.name : (tag.name_en || tag.name)}
+                      </Badge>
+                    ))}
                     <span className="text-sm text-muted-foreground">{software.size}</span>
                     {(software as any).rating > 0 && (
                       <div className="flex items-center gap-1 text-yellow-500 ml-2">
@@ -399,12 +411,8 @@ export const SoftwareDetail: React.FC<{ id: number; onBack: () => void; onDownlo
                     key={s.id} 
                     className="flex gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
                     onClick={() => {
-                      // Trigger re-load by changing ID
                       window.scrollTo(0, 0);
-                      setSoftware(null);
-                      fetchApi<Software>(`/software/${s.id}`).then(res => {
-                        if (res.code === 0) setSoftware(res.data);
-                      });
+                      onDetail(s.id);
                     }}
                   >
                     {s.screenshots && s.screenshots.length > 0 && (
@@ -412,7 +420,9 @@ export const SoftwareDetail: React.FC<{ id: number; onBack: () => void; onDownlo
                     )}
                     <div>
                       <h4 className="font-medium text-sm line-clamp-1">{s.name}</h4>
-                      <p className="text-xs text-muted-foreground mt-1">{s.category}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {lang === 'zh' ? s.category : (s.category_en || s.category)}
+                      </p>
                     </div>
                   </div>
                 ))}

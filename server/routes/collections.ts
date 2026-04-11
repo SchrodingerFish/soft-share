@@ -21,9 +21,10 @@ router.get("/", async (req, res) => {
 // Get Collection Detail (with software items)
 router.get("/:id", async (req, res) => {
   try {
+    const id = parseInt(req.params.id);
     const result = await db.execute({
       sql: "SELECT * FROM collections WHERE id = ?",
-      args: [req.params.id]
+      args: [id]
     });
     
     const collection = result.rows[0] as any;
@@ -45,10 +46,21 @@ router.get("/:id", async (req, res) => {
       args: softwareIds
     });
 
+    const parseJson = (str: string | null, fallback: any) => {
+      if (!str) return fallback;
+      try {
+        return JSON.parse(str);
+      } catch (e) {
+        return fallback;
+      }
+    };
+
     const items = softwareResult.rows.map((row: any) => ({
       ...row,
-      platforms: JSON.parse(row.platforms as string),
-      screenshots: JSON.parse(row.screenshots as string)
+      platforms: parseJson(row.platforms as string, []),
+      screenshots: parseJson(row.screenshots as string, []),
+      version_history: parseJson(row.version_history as string, []),
+      tags: parseJson(row.tags as string, [])
     }));
 
     res.json({
@@ -68,17 +80,19 @@ router.get("/:id", async (req, res) => {
 // Admin: Add Collection
 router.post("/", authenticate, isAdmin, async (req, res) => {
   try {
-    const { title, description, cover_image, software_ids } = req.body;
+    const { title, title_en, description, description_en, cover_image, software_ids } = req.body;
     const sql = process.env.DB_TYPE === "postgres"
-      ? "INSERT INTO collections (title, description, cover_image, software_ids) VALUES (?, ?, ?, ?) RETURNING id"
-      : "INSERT INTO collections (title, description, cover_image, software_ids) VALUES (?, ?, ?, ?)";
+      ? "INSERT INTO collections (title, title_en, description, description_en, cover_image, software_ids) VALUES (?, ?, ?, ?, ?, ?) RETURNING id"
+      : "INSERT INTO collections (title, title_en, description, description_en, cover_image, software_ids) VALUES (?, ?, ?, ?, ?, ?)";
     
     const result = await db.execute({
       sql,
-      args: [title, description, cover_image, JSON.stringify(software_ids || [])]
+      args: [title, title_en || title, description, description_en || description, cover_image, JSON.stringify(software_ids || [])]
     });
     
-    const id = process.env.DB_TYPE === "postgres" ? result.rows[0].id : result.lastInsertRowid;
+    const id = process.env.DB_TYPE === "postgres" 
+      ? (result.rows && result.rows.length > 0 ? (result.rows[0] as any).id : null)
+      : result.lastInsertRowid;
     res.json({ code: 0, message: "success", data: { id } });
   } catch (err: any) {
     res.json({ code: 500, message: err.message });
@@ -88,10 +102,11 @@ router.post("/", authenticate, isAdmin, async (req, res) => {
 // Admin: Update Collection
 router.put("/:id", authenticate, isAdmin, async (req, res) => {
   try {
-    const { title, description, cover_image, software_ids } = req.body;
+    const id = parseInt(req.params.id);
+    const { title, title_en, description, description_en, cover_image, software_ids } = req.body;
     await db.execute({
-      sql: "UPDATE collections SET title = ?, description = ?, cover_image = ?, software_ids = ? WHERE id = ?",
-      args: [title, description, cover_image, JSON.stringify(software_ids || []), req.params.id]
+      sql: "UPDATE collections SET title = ?, title_en = ?, description = ?, description_en = ?, cover_image = ?, software_ids = ? WHERE id = ?",
+      args: [title, title_en || title, description, description_en || description, cover_image, JSON.stringify(software_ids || []), id]
     });
     res.json({ code: 0, message: "success" });
   } catch (err: any) {
@@ -102,7 +117,8 @@ router.put("/:id", authenticate, isAdmin, async (req, res) => {
 // Admin: Delete Collection
 router.delete("/:id", authenticate, isAdmin, async (req, res) => {
   try {
-    await db.execute({ sql: "DELETE FROM collections WHERE id = ?", args: [req.params.id] });
+    const id = parseInt(req.params.id);
+    await db.execute({ sql: "DELETE FROM collections WHERE id = ?", args: [id] });
     res.json({ code: 0, message: "success" });
   } catch (err: any) {
     res.json({ code: 500, message: err.message });

@@ -7,11 +7,12 @@ const router = Router();
 router.get("/hot", async (req, res) => {
   try {
     const result = await db.execute({
-      sql: `SELECT s.id, s.name, s.category, s.screenshots, COUNT(l.id) as download_count 
+      sql: `SELECT s.id, s.name, s.category, c.name_en as category_en, s.screenshots, COUNT(l.id) as download_count 
             FROM software s 
+            LEFT JOIN categories c ON s.category = c.name
             LEFT JOIN download_logs l ON s.id = l.software_id 
-            WHERE l.created_at >= date('now') 
-            GROUP BY s.id 
+            WHERE l.created_at >= ${process.env.DB_TYPE === 'postgres' ? "CURRENT_DATE" : "date('now')"} 
+            GROUP BY s.id, c.name_en 
             ORDER BY download_count DESC 
             LIMIT 20`
     });
@@ -28,11 +29,13 @@ router.get("/hot", async (req, res) => {
     // Fallback if no downloads today
     if (result.rows.length === 0) {
       const fallback = await db.execute({
-        sql: "SELECT id, name, category, screenshots, popularity as download_count FROM software ORDER BY popularity DESC LIMIT 20"
+        sql: "SELECT s.id, s.name, s.category, c.name_en as category_en, s.screenshots, s.platforms, s.tags, s.popularity as download_count FROM software s LEFT JOIN categories c ON s.category = c.name ORDER BY s.popularity DESC LIMIT 20"
       });
       const rows = fallback.rows.map((row: any) => ({
         ...row,
-        screenshots: parseJson(row.screenshots, [])
+        platforms: parseJson(row.platforms, []),
+        screenshots: parseJson(row.screenshots, []),
+        tags: parseJson(row.tags, [])
       }));
       res.json({ code: 0, message: "success", data: rows });
       return;
@@ -40,7 +43,9 @@ router.get("/hot", async (req, res) => {
 
     const rows = result.rows.map((row: any) => ({
       ...row,
-      screenshots: parseJson(row.screenshots, [])
+      platforms: parseJson(row.platforms, []),
+      screenshots: parseJson(row.screenshots, []),
+      tags: parseJson(row.tags, [])
     }));
     res.json({ code: 0, message: "success", data: rows });
   } catch (err: any) {
@@ -61,11 +66,12 @@ router.get("/weekly", async (req, res) => {
     };
 
     const result = await db.execute({
-      sql: `SELECT s.id, s.name, s.category, s.screenshots, COUNT(l.id) as download_count 
+      sql: `SELECT s.id, s.name, s.category, c.name_en as category_en, s.screenshots, COUNT(l.id) as download_count 
             FROM software s 
+            LEFT JOIN categories c ON s.category = c.name
             LEFT JOIN download_logs l ON s.id = l.software_id 
-            WHERE l.created_at >= date('now', '-7 days') 
-            GROUP BY s.id 
+            WHERE l.created_at >= ${process.env.DB_TYPE === 'postgres' ? "CURRENT_DATE - INTERVAL '7 days'" : "date('now', '-7 days')"} 
+            GROUP BY s.id, c.name_en 
             ORDER BY download_count DESC 
             LIMIT 20`
     });
@@ -73,11 +79,13 @@ router.get("/weekly", async (req, res) => {
     // Fallback
     if (result.rows.length === 0) {
       const fallback = await db.execute({
-        sql: "SELECT id, name, category, screenshots, popularity as download_count FROM software ORDER BY popularity DESC LIMIT 20"
+        sql: "SELECT s.id, s.name, s.category, c.name_en as category_en, s.screenshots, s.platforms, s.tags, s.popularity as download_count FROM software s LEFT JOIN categories c ON s.category = c.name ORDER BY s.popularity DESC LIMIT 20"
       });
       const rows = fallback.rows.map((row: any) => ({
         ...row,
-        screenshots: parseJson(row.screenshots, [])
+        platforms: parseJson(row.platforms, []),
+        screenshots: parseJson(row.screenshots, []),
+        tags: parseJson(row.tags, [])
       }));
       res.json({ code: 0, message: "success", data: rows });
       return;
@@ -85,7 +93,9 @@ router.get("/weekly", async (req, res) => {
 
     const rows = result.rows.map((row: any) => ({
       ...row,
-      screenshots: parseJson(row.screenshots, [])
+      platforms: parseJson(row.platforms, []),
+      screenshots: parseJson(row.screenshots, []),
+      tags: parseJson(row.tags, [])
     }));
     res.json({ code: 0, message: "success", data: rows });
   } catch (err: any) {

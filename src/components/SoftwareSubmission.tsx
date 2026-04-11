@@ -91,7 +91,14 @@ export const SoftwareSubmission: React.FC<{ onBack: () => void }> = ({ onBack })
               </SelectTrigger>
               <SelectContent>
                 {categories.map(c => (
-                  <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>
+                  <SelectItem key={c.id} value={c.name}>
+                    <div className="flex items-center justify-between w-full gap-2">
+                      <span>{c.name}</span>
+                      {c.name_en && (
+                        <span className="text-xs text-muted-foreground">({c.name_en})</span>
+                      )}
+                    </div>
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>

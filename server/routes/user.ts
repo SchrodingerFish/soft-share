@@ -11,9 +11,10 @@ router.get("/history", authenticate, async (req, res) => {
   try {
     const userId = (req as any).user.id;
     const result = await db.execute({
-      sql: `SELECT s.*, l.created_at as download_at 
+      sql: `SELECT s.*, c.name_en as category_en, l.created_at as download_at 
             FROM download_logs l 
             JOIN software s ON l.software_id = s.id 
+            LEFT JOIN categories c ON s.category = c.name
             WHERE l.user_id = ? 
             ORDER BY l.created_at DESC`,
       args: [userId]
@@ -56,7 +57,7 @@ router.get("/recommendations", authenticate, async (req, res) => {
     if (categories.length === 0) {
       // Fallback: Just popular software
       const fallback = await db.execute({
-        sql: "SELECT * FROM software ORDER BY popularity DESC LIMIT 8"
+        sql: "SELECT s.*, c.name_en as category_en FROM software s LEFT JOIN categories c ON s.category = c.name ORDER BY s.popularity DESC LIMIT 8"
       });
       
       const parseJson = (str: string | null, fallbackVal: any) => {
@@ -81,10 +82,11 @@ router.get("/recommendations", authenticate, async (req, res) => {
     // Recommend software from same categories that user hasn't favorited yet
     const placeholders = categories.map(() => "?").join(",");
     const result = await db.execute({
-      sql: `SELECT * FROM software 
-            WHERE category IN (${placeholders}) 
-            AND id NOT IN (SELECT software_id FROM favorites WHERE user_id = ?)
-            ORDER BY popularity DESC 
+      sql: `SELECT s.*, c.name_en as category_en FROM software s 
+            LEFT JOIN categories c ON s.category = c.name
+            WHERE s.category IN (${placeholders}) 
+            AND s.id NOT IN (SELECT software_id FROM favorites WHERE user_id = ?)
+            ORDER BY s.popularity DESC 
             LIMIT 8`,
       args: [...categories, userId]
     });
@@ -141,7 +143,7 @@ router.get("/notifications", authenticate, async (req, res) => {
 router.post("/notifications/:id/read", authenticate, async (req, res) => {
   try {
     const userId = (req as any).user.id;
-    const id = req.params.id;
+    const id = parseInt(req.params.id);
     await db.execute({
       sql: "UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?",
       args: [id, userId]
@@ -170,7 +172,7 @@ router.post("/notifications/read-all", authenticate, async (req, res) => {
 router.delete("/notifications/:id", authenticate, async (req, res) => {
   try {
     const userId = (req as any).user.id;
-    const id = req.params.id;
+    const id = parseInt(req.params.id);
     await db.execute({
       sql: "DELETE FROM notifications WHERE id = ? AND user_id = ?",
       args: [id, userId]
@@ -218,9 +220,10 @@ router.get("/favorites", authenticate, async (req, res) => {
   try {
     const userId = (req as any).user.id;
     const result = await db.execute({
-      sql: `SELECT s.* 
+      sql: `SELECT s.*, c.name_en as category_en 
             FROM favorites f 
             JOIN software s ON f.software_id = s.id 
+            LEFT JOIN categories c ON s.category = c.name
             WHERE f.user_id = ? 
             ORDER BY f.created_at DESC`,
       args: [userId]

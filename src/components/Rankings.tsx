@@ -89,7 +89,9 @@ export const Rankings: React.FC<{ onSelect: (id: number) => void }> = ({ onSelec
               <div className="flex-1 min-w-0">
                 <h4 className="font-bold truncate group-hover:text-primary transition-colors">{item.name}</h4>
                 <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">{item.category}</Badge>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    {lang === 'zh' ? item.category : (item.category_en || item.category)}
+                  </Badge>
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
                     <Download className="h-3 w-3" />
                     {item.download_count} {t.downloads}

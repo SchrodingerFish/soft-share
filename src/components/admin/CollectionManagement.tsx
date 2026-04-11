@@ -13,7 +13,9 @@ import { toast } from "sonner";
 interface Collection {
   id?: number;
   title: string;
+  title_en: string;
   description: string;
+  description_en: string;
   cover_image: string;
   software_ids: number[];
 }
@@ -129,7 +131,8 @@ export const CollectionManagement: React.FC = () => {
         <table className="w-full text-sm">
           <thead className="bg-muted/50 border-b">
             <tr>
-              <th className="px-4 py-3 text-left font-medium">{t.collection_title}</th>
+              <th className="px-4 py-3 text-left font-medium">{t.collection_title} (ZH)</th>
+              <th className="px-4 py-3 text-left font-medium">{t.collection_title} (EN)</th>
               <th className="px-4 py-3 text-left font-medium">{t.items_count}</th>
               <th className="px-4 py-3 text-right font-medium">{t.actions}</th>
             </tr>
@@ -138,6 +141,7 @@ export const CollectionManagement: React.FC = () => {
             {collections.map((c) => (
               <tr key={c.id} className="hover:bg-muted/30 transition-colors">
                 <td className="px-4 py-3 font-medium">{c.title}</td>
+                <td className="px-4 py-3 text-muted-foreground">{c.title_en}</td>
                 <td className="px-4 py-3 text-muted-foreground">{c.software_ids.length} {t.items_count}</td>
                 <td className="px-4 py-3 text-right space-x-2">
                   <Button variant="ghost" size="icon" onClick={() => openEdit(c)}>
@@ -166,18 +170,33 @@ export const CollectionManagement: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">{t.collection_title}</label>
+              <label className="text-sm font-medium">{t.collection_title} (ZH)</label>
               <Input 
                 value={currentCollection.title || ""} 
                 onChange={(e) => setCurrentCollection({...currentCollection, title: e.target.value})}
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">{t.collection_desc}</label>
+              <label className="text-sm font-medium">{t.collection_title} (EN)</label>
+              <Input 
+                value={currentCollection.title_en || ""} 
+                onChange={(e) => setCurrentCollection({...currentCollection, title_en: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{t.collection_desc} (ZH)</label>
               <Textarea 
-                rows={3}
+                rows={2}
                 value={currentCollection.description || ""} 
                 onChange={(e) => setCurrentCollection({...currentCollection, description: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{t.collection_desc} (EN)</label>
+              <Textarea 
+                rows={2}
+                value={currentCollection.description_en || ""} 
+                onChange={(e) => setCurrentCollection({...currentCollection, description_en: e.target.value})}
               />
             </div>
             <div className="space-y-2">

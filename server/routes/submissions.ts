@@ -34,9 +34,19 @@ router.post("/", authenticate, actionLimiter, validate(submissionSchema), async 
 router.get("/", authenticate, isAdmin, async (req, res) => {
   try {
     const result = await db.execute({
-      sql: "SELECT s.*, u.username FROM submissions s JOIN users u ON s.user_id = u.id ORDER BY s.created_at DESC"
+      sql: `SELECT s.*, u.username, c.name_en as category_en 
+            FROM submissions s 
+            JOIN users u ON s.user_id = u.id 
+            LEFT JOIN categories c ON s.category = c.name 
+            ORDER BY s.created_at DESC`
     });
-    res.json({ code: 0, message: "success", data: result.rows });
+    
+    const rows = result.rows.map((row: any) => ({
+      ...row,
+      platforms: JSON.parse(row.platforms as string || "[]")
+    }));
+    
+    res.json({ code: 0, message: "success", data: rows });
   } catch (err: any) {
     res.json({ code: 500, message: err.message });
   }
@@ -45,7 +55,7 @@ router.get("/", authenticate, isAdmin, async (req, res) => {
 // Update submission status (Admin only)
 router.put("/:id/status", authenticate, isAdmin, async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params.id);
     const { status } = req.body; // 'approved' or 'rejected'
 
     if (!['approved', 'rejected'].includes(status)) {
@@ -73,6 +83,27 @@ router.put("/:id/status", authenticate, isAdmin, async (req, res) => {
           ]
         });
       }
+    }
+
+    // Notify the user who submitted
+    const subResult = await db.execute({ sql: "SELECT user_id, name FROM submissions WHERE id = ?", args: [id] });
+    const sub = subResult.rows[0];
+    if (sub) {
+      const title = status === 'approved' ? 'Submission Approved' : 'Submission Rejected';
+      const content = `Your submission for ${sub.name} has been ${status}.`;
+      
+      await db.execute({
+        sql: "INSERT INTO notifications (user_id, title, content, type) VALUES (?, ?, ?, ?)",
+        args: [sub.user_id, title, content, "system"]
+      });
+
+      const { getIO } = await import("../socket.js");
+      const io = getIO();
+      io.to(`user_${sub.user_id}`).emit("notification", {
+        title,
+        content,
+        type: "system"
+      });
     }
 
     res.json({ code: 0, message: "Status updated" });

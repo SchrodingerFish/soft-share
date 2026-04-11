@@ -7,10 +7,18 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Plus, Edit2, Trash2, X, Save, Search, RefreshCw, CheckCircle, AlertCircle, Sparkles, Loader2 } from "lucide-react";
+import { Badge } from "../ui/badge";
+import { Plus, Edit2, Trash2, X, Save, Search, RefreshCw, CheckCircle, AlertCircle, Sparkles, Loader2, Tag as TagIcon } from "lucide-react";
 import { toast } from "sonner";
 import { aiService } from "../../services/aiService";
 import MDEditor from '@uiw/react-md-editor';
+
+interface Tag {
+  id: number;
+  name: string;
+  name_en: string;
+  color: string;
+}
 
 export const SoftwareManagement: React.FC = () => {
   const { lang, theme, categories } = useAppStore();
@@ -18,6 +26,7 @@ export const SoftwareManagement: React.FC = () => {
   const t = translations[lang];
   
   const [softwareList, setSoftwareList] = useState<Software[]>([]);
+  const [allTags, setAllTags] = useState<Tag[]>([]);
   const [search, setSearch] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [currentSoftware, setCurrentSoftware] = useState<Partial<Software>>({});
@@ -30,8 +39,18 @@ export const SoftwareManagement: React.FC = () => {
     }
   };
 
+  const fetchTags = async () => {
+    const res = await fetchApi<Tag[]>("/admin/tags", {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    if (res.code === 0) {
+      setAllTags(res.data);
+    }
+  };
+
   useEffect(() => {
     fetchSoftware();
+    fetchTags();
   }, [search]);
 
   const triggerLinkCheck = async () => {
@@ -120,7 +139,8 @@ export const SoftwareManagement: React.FC = () => {
         popularity: 0,
         download_url: "",
         version_history: [],
-        tutorial: ""
+        tutorial: "",
+        tags: []
       });
     }
     setIsEditing(true);
@@ -156,6 +176,7 @@ export const SoftwareManagement: React.FC = () => {
             <tr>
               <th className="px-4 py-3 text-left font-medium">{t.software_name}</th>
               <th className="px-4 py-3 text-left font-medium">{t.categories}</th>
+              <th className="px-4 py-3 text-left font-medium">{t.tags || "Tags"}</th>
               <th className="px-4 py-3 text-left font-medium">{t.version}</th>
               <th className="px-4 py-3 text-left font-medium">{t.status}</th>
               <th className="px-4 py-3 text-right font-medium">{t.actions}</th>
@@ -165,7 +186,18 @@ export const SoftwareManagement: React.FC = () => {
             {softwareList.map((s) => (
               <tr key={s.id} className="hover:bg-muted/30 transition-colors">
                 <td className="px-4 py-3 font-medium">{s.name}</td>
-                <td className="px-4 py-3 text-muted-foreground">{s.category}</td>
+                <td className="px-4 py-3 text-muted-foreground">
+                  {lang === 'en' && s.category_en ? s.category_en : s.category}
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex flex-wrap gap-1">
+                    {Array.isArray(s.tags) && s.tags.map(tag => (
+                      <Badge key={tag.name} variant="outline" style={{ borderColor: tag.color, color: tag.color, fontSize: '10px' }}>
+                        {lang === 'en' && tag.name_en ? tag.name_en : tag.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </td>
                 <td className="px-4 py-3 text-muted-foreground">{s.version}</td>
                 <td className="px-4 py-3">
                   {s.link_status === 'broken' ? (
@@ -261,7 +293,14 @@ export const SoftwareManagement: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map(c => (
-                      <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>
+                      <SelectItem key={c.id} value={c.name}>
+                        <div className="flex items-center justify-between w-full gap-2">
+                          <span>{c.name}</span>
+                          {c.name_en && (
+                            <span className="text-xs text-muted-foreground">({c.name_en})</span>
+                          )}
+                        </div>
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -285,9 +324,121 @@ export const SoftwareManagement: React.FC = () => {
                 <label className="text-sm font-medium">{t.popularity}</label>
                 <Input 
                   type="number"
-                  value={currentSoftware.popularity || 0} 
-                  onChange={(e) => setCurrentSoftware({...currentSoftware, popularity: parseInt(e.target.value)})}
+                  value={currentSoftware.popularity ?? 0} 
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    setCurrentSoftware({...currentSoftware, popularity: isNaN(val) ? 0 : val});
+                  }}
                 />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">{t.tags || "Tags"}</label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {Array.isArray(currentSoftware.tags) && currentSoftware.tags.map((tag, index) => tag && (
+                  <Badge 
+                    key={index} 
+                    variant="outline" 
+                    style={{ 
+                      borderColor: `${tag.color}40`, 
+                      color: tag.color,
+                      backgroundColor: `${tag.color}10`
+                    }}
+                    className="flex items-center gap-1.5 py-1 px-2"
+                  >
+                    <span className="text-xs font-medium">
+                      {lang === 'zh' ? tag.name : (tag.name_en || tag.name)}
+                    </span>
+                    <button
+                      type="button"
+                      className="hover:bg-destructive hover:text-destructive-foreground rounded-full p-0.5 transition-colors"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const newTags = [...(currentSoftware.tags || [])];
+                        newTags.splice(index, 1);
+                        setCurrentSoftware({...currentSoftware, tags: newTags});
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Select 
+                  onValueChange={(tagName) => {
+                    const tag = allTags.find(at => at.name === tagName);
+                    if (tag && !currentSoftware.tags?.some(t => t.name === tag.name)) {
+                      setCurrentSoftware({
+                        ...currentSoftware,
+                        tags: [...(currentSoftware.tags || []), { name: tag.name, name_en: tag.name_en, color: tag.color }]
+                      });
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Select existing tag" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allTags.map(tag => tag && (
+                      <SelectItem key={tag.id} value={tag.name}>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: tag.color }} />
+                          <div className="flex flex-col">
+                            <span className="text-sm">{tag.name}</span>
+                            {tag.name_en && <span className="text-[10px] text-muted-foreground">{tag.name_en}</span>}
+                          </div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <div className="flex-1 flex gap-2 border rounded-md p-1 bg-muted/30">
+                  <Input 
+                    placeholder="New tag name (ZH)" 
+                    className="h-8 text-xs"
+                    id="new-tag-name"
+                  />
+                  <Input 
+                    placeholder="New tag name (EN)" 
+                    className="h-8 text-xs"
+                    id="new-tag-name-en"
+                  />
+                  <Input 
+                    type="color" 
+                    className="w-8 h-8 p-0 border-none bg-transparent"
+                    id="new-tag-color"
+                    defaultValue="#808080"
+                  />
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="h-8 px-2"
+                    onClick={() => {
+                      const nameInput = document.getElementById('new-tag-name') as HTMLInputElement;
+                      const nameEnInput = document.getElementById('new-tag-name-en') as HTMLInputElement;
+                      const colorInput = document.getElementById('new-tag-color') as HTMLInputElement;
+                      if (nameInput.value) {
+                        if (!currentSoftware.tags?.some(t => t.name === nameInput.value)) {
+                          setCurrentSoftware({
+                            ...currentSoftware,
+                            tags: [...(currentSoftware.tags || []), { 
+                              name: nameInput.value, 
+                              name_en: nameEnInput.value || nameInput.value, 
+                              color: colorInput.value 
+                            }]
+                          });
+                        }
+                        nameInput.value = "";
+                        nameEnInput.value = "";
+                      }
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
 

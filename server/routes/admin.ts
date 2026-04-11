@@ -1,17 +1,8 @@
 import { Router } from "express";
 import db from "../db/index.js";
-import { authenticate } from "../middlewares/auth.js";
+import { authenticate, isAdmin } from "../middlewares/auth.js";
 
 const router = Router();
-
-// Middleware to check if user is admin
-const isAdmin = (req: any, res: any, next: any) => {
-  if (req.user && req.user.role === 'admin') {
-    next();
-  } else {
-    res.json({ code: 403, message: "Forbidden: Admin access required" });
-  }
-};
 
 // Get all users
 router.get("/users", authenticate, isAdmin, async (req, res) => {
@@ -26,7 +17,7 @@ router.get("/users", authenticate, isAdmin, async (req, res) => {
 // Update user paid status
 router.post("/users/:id/paid", authenticate, isAdmin, async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params.id);
     const { is_paid } = req.body;
     
     const isPostgres = process.env.DB_TYPE === "postgres";
@@ -46,7 +37,7 @@ router.post("/users/:id/paid", authenticate, isAdmin, async (req, res) => {
 // Update user role
 router.post("/users/:id/role", authenticate, isAdmin, async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params.id);
     const { role } = req.body;
     
     await db.execute({
@@ -72,10 +63,10 @@ router.get("/tags", async (req, res) => {
 
 router.post("/tags", authenticate, isAdmin, async (req, res) => {
   try {
-    const { name, color } = req.body;
+    const { name, name_en, color } = req.body;
     await db.execute({
-      sql: "INSERT INTO tags (name, color) VALUES (?, ?)",
-      args: [name, color || "gray"]
+      sql: "INSERT INTO tags (name, name_en, color) VALUES (?, ?, ?)",
+      args: [name, name_en || name, color || "gray"]
     });
     res.json({ code: 0, message: "success" });
   } catch (err: any) {
@@ -85,11 +76,11 @@ router.post("/tags", authenticate, isAdmin, async (req, res) => {
 
 router.put("/tags/:id", authenticate, isAdmin, async (req, res) => {
   try {
-    const { id } = req.params;
-    const { name, color } = req.body;
+    const id = parseInt(req.params.id);
+    const { name, name_en, color } = req.body;
     await db.execute({
-      sql: "UPDATE tags SET name = ?, color = ? WHERE id = ?",
-      args: [name, color || "gray", id]
+      sql: "UPDATE tags SET name = ?, name_en = ?, color = ? WHERE id = ?",
+      args: [name, name_en || name, color || "gray", id]
     });
     res.json({ code: 0, message: "success" });
   } catch (err: any) {
@@ -99,7 +90,7 @@ router.put("/tags/:id", authenticate, isAdmin, async (req, res) => {
 
 router.delete("/tags/:id", authenticate, isAdmin, async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params.id);
     await db.execute({
       sql: "DELETE FROM tags WHERE id = ?",
       args: [id]

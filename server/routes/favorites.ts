@@ -16,10 +16,21 @@ router.get("/", authenticate, async (req: AuthRequest, res) => {
       args: [req.user!.id]
     });
     
+    const parseJson = (str: string | null, fallback: any) => {
+      if (!str) return fallback;
+      try {
+        return JSON.parse(str);
+      } catch (e) {
+        return fallback;
+      }
+    };
+
     const rows = result.rows.map((row: any) => ({
       ...row,
-      platforms: JSON.parse(row.platforms as string),
-      screenshots: JSON.parse(row.screenshots as string)
+      platforms: parseJson(row.platforms as string, []),
+      screenshots: parseJson(row.screenshots as string, []),
+      version_history: parseJson(row.version_history as string, []),
+      tags: parseJson(row.tags as string, [])
     }));
     
     res.json({ code: 0, message: "success", data: rows });
@@ -62,7 +73,7 @@ router.post("/", authenticate, async (req: AuthRequest, res) => {
 // Check Favorite Status
 router.get("/:software_id", authenticate, async (req: AuthRequest, res) => {
   try {
-    const { software_id } = req.params;
+    const software_id = parseInt(req.params.software_id);
     const user_id = req.user!.id;
     
     const existingResult = await db.execute({

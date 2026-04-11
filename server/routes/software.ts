@@ -39,24 +39,48 @@ router.get("/", async (req, res) => {
       }
     };
 
-    let query = "SELECT * FROM software WHERE 1=1";
+    let query = `
+      SELECT s.*, c.name_en as category_en 
+      FROM software s 
+      LEFT JOIN categories c ON s.category = c.name 
+      WHERE 1=1
+    `;
     const params: any[] = [];
     
     if (search) {
-      query += " AND (name LIKE ? OR description LIKE ?)";
-      params.push(`%${search}%`, `%${search}%`);
+      query += " AND (s.name LIKE ? OR s.description LIKE ? OR s.category LIKE ? OR c.name_en LIKE ? OR s.tags LIKE ?)";
+      const searchPattern = `%${search}%`;
+      params.push(searchPattern, searchPattern, searchPattern, searchPattern, searchPattern);
     }
     if (platform) {
-      query += " AND platforms LIKE ?";
+      query += " AND s.platforms LIKE ?";
       params.push(`%${platform}%`);
     }
     if (category) {
-      query += " AND category = ?";
-      params.push(category);
+      // Support filtering by either Chinese or English category name
+      query += " AND (s.category = ? OR c.name_en = ?)";
+      params.push(category, category);
     }
     
-    const countQuery = query.replace("SELECT *", "SELECT COUNT(*) as total");
-    const totalResult = await db.execute({ sql: countQuery, args: params });
+    const countQuery = `
+      SELECT COUNT(*) as total 
+      FROM software s 
+      LEFT JOIN categories c ON s.category = c.name 
+      WHERE 1=1 
+      ${search ? " AND (s.name LIKE ? OR s.description LIKE ? OR s.category LIKE ? OR c.name_en LIKE ? OR s.tags LIKE ?)" : ""}
+      ${platform ? " AND s.platforms LIKE ?" : ""}
+      ${category ? " AND (s.category = ? OR c.name_en = ?)" : ""}
+    `;
+    
+    const countParams: any[] = [];
+    if (search) {
+      const searchPattern = `%${search}%`;
+      countParams.push(searchPattern, searchPattern, searchPattern, searchPattern, searchPattern);
+    }
+    if (platform) countParams.push(`%${platform}%`);
+    if (category) countParams.push(category, category);
+
+    const totalResult = await db.execute({ sql: countQuery, args: countParams });
     const total = totalResult.rows[0].total as number;
     
     query += " ORDER BY popularity DESC LIMIT ? OFFSET ?";
@@ -66,7 +90,9 @@ router.get("/", async (req, res) => {
     const rows = result.rows.map((row: any) => ({
       ...row,
       platforms: parseJson(row.platforms, []),
-      screenshots: parseJson(row.screenshots, [])
+      screenshots: parseJson(row.screenshots, []),
+      version_history: parseJson(row.version_history, []),
+      tags: parseJson(row.tags, [])
     }));
     
     res.json({
@@ -87,9 +113,14 @@ router.get("/", async (req, res) => {
 // Get Software Detail
 router.get("/:id", async (req, res) => {
   try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      res.status(400).json({ code: 400, message: "Invalid ID format" });
+      return;
+    }
     const result = await db.execute({
-      sql: "SELECT * FROM software WHERE id = ?",
-      args: [req.params.id]
+      sql: "SELECT s.*, c.name_en as category_en FROM software s LEFT JOIN categories c ON s.category = c.name WHERE s.id = ?",
+      args: [id]
     });
     
     const row = result.rows[0] as any;
@@ -109,7 +140,7 @@ router.get("/:id", async (req, res) => {
 
     // Get Related Software (same category, excluding current)
     const relatedResult = await db.execute({
-      sql: "SELECT id, name, version, platforms, category, size, update_date, description, screenshots, popularity, link_status FROM software WHERE category = ? AND id != ? LIMIT 4",
+      sql: "SELECT s.id, s.name, s.version, s.platforms, s.category, c.name_en as category_en, s.size, s.update_date, s.description, s.screenshots, s.popularity, s.link_status FROM software s LEFT JOIN categories c ON s.category = c.name WHERE s.category = ? AND s.id != ? LIMIT 4",
       args: [row.category, row.id]
     });
 
@@ -134,6 +165,7 @@ router.get("/:id", async (req, res) => {
         platforms: parseJson(row.platforms, []),
         screenshots: parseJson(row.screenshots, []),
         version_history: parseJson(row.version_history, []),
+        tags: parseJson(row.tags, []),
         rating: stats.avg_rating || 0,
         comment_count: stats.count || 0,
         related
@@ -227,26 +259,30 @@ router.post("/:id/download", actionLimiter, async (req, res) => {
 // Admin: Add Software
 router.post("/", authenticate, isAdmin, validate(softwareSchema), async (req, res) => {
   try {
-    const { name, version, platforms, category, size, update_date, description, screenshots, popularity, download_url, version_history, tutorial } = req.body;
+    const { name, version, platforms, category, size, update_date, description, screenshots, popularity, download_url, version_history, tutorial, tags } = req.body;
     
     const sql = process.env.DB_TYPE === "postgres"
-      ? `INSERT INTO software (name, version, platforms, category, size, update_date, description, screenshots, popularity, download_url, version_history, tutorial)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
-      : `INSERT INTO software (name, version, platforms, category, size, update_date, description, screenshots, popularity, download_url, version_history, tutorial)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      ? `INSERT INTO software (name, version, platforms, category, size, update_date, description, screenshots, popularity, download_url, version_history, tutorial, tags)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`
+      : `INSERT INTO software (name, version, platforms, category, size, update_date, description, screenshots, popularity, download_url, version_history, tutorial, tags)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     
     const result = await db.execute({
       sql,
       args: [
         name, version, JSON.stringify(platforms), category, size, update_date, description, 
         JSON.stringify(screenshots), popularity || 0, download_url, 
-        JSON.stringify(version_history || []), tutorial || ""
+        JSON.stringify(version_history || []), tutorial || "", JSON.stringify(tags || [])
       ]
     });
     
     const id = process.env.DB_TYPE === "postgres" 
-      ? result.rows[0].id 
+      ? (result.rows && result.rows.length > 0 ? (result.rows[0] as any).id : null)
       : result.lastInsertRowid;
+      
+    if (!id && process.env.DB_TYPE === "postgres") {
+      throw new Error("Failed to get inserted ID from database");
+    }
       
     res.json({ code: 0, message: "success", data: { id } });
   } catch (err: any) {
@@ -257,8 +293,8 @@ router.post("/", authenticate, isAdmin, validate(softwareSchema), async (req, re
 // Admin: Update Software
 router.put("/:id", authenticate, isAdmin, validate(softwareSchema), async (req: AuthRequest, res: Response) => {
   try {
-    const { name, version, platforms, category, size, update_date, description, screenshots, popularity, download_url, version_history, tutorial } = req.body;
-    const id = req.params.id;
+    const { name, version, platforms, category, size, update_date, description, screenshots, popularity, download_url, version_history, tutorial, tags } = req.body;
+    const id = parseInt(req.params.id);
     
     // Check if version has changed
     const currentResult = await db.execute({
@@ -270,7 +306,7 @@ router.put("/:id", authenticate, isAdmin, validate(softwareSchema), async (req: 
     const sql = `UPDATE software SET 
       name = ?, version = ?, platforms = ?, category = ?, size = ?, 
       update_date = ?, description = ?, screenshots = ?, popularity = ?, download_url = ?,
-      version_history = ?, tutorial = ?
+      version_history = ?, tutorial = ?, tags = ?
       WHERE id = ?`;
       
     await db.execute({
@@ -278,7 +314,7 @@ router.put("/:id", authenticate, isAdmin, validate(softwareSchema), async (req: 
       args: [
         name, version, JSON.stringify(platforms), category, size, update_date, description, 
         JSON.stringify(screenshots), popularity, download_url, 
-        JSON.stringify(version_history || []), tutorial || "", id
+        JSON.stringify(version_history || []), tutorial || "", JSON.stringify(tags || []), id
       ]
     });
 
@@ -289,6 +325,9 @@ router.put("/:id", authenticate, isAdmin, validate(softwareSchema), async (req: 
         args: [id]
       });
 
+      const { getIO } = await import("../socket.js");
+      const io = getIO();
+
       for (const follower of followers.rows) {
         await db.execute({
           sql: "INSERT INTO notifications (user_id, title, content, type) VALUES (?, ?, ?, ?)",
@@ -298,6 +337,13 @@ router.put("/:id", authenticate, isAdmin, validate(softwareSchema), async (req: 
             `${current.name} has been updated to version ${version}. Check it out!`,
             "update"
           ]
+        });
+        
+        // Emit real-time notification
+        io.to(`user_${follower.user_id}`).emit("notification", {
+          title: "Software Update",
+          content: `${current.name} has been updated to version ${version}. Check it out!`,
+          type: "update"
         });
       }
     }
@@ -311,7 +357,7 @@ router.put("/:id", authenticate, isAdmin, validate(softwareSchema), async (req: 
 // Admin: Delete Software
 router.delete("/:id", authenticate, isAdmin, async (req, res) => {
   try {
-    const id = req.params.id;
+    const id = parseInt(req.params.id);
     await db.execute({ sql: "DELETE FROM software WHERE id = ?", args: [id] });
     await db.execute({ sql: "DELETE FROM favorites WHERE software_id = ?", args: [id] });
     res.json({ code: 0, message: "success" });

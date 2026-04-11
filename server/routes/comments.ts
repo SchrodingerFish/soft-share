@@ -10,7 +10,7 @@ const router = Router();
 // Get comments for a software
 router.get("/:softwareId", async (req, res) => {
   try {
-    const { softwareId } = req.params;
+    const softwareId = parseInt(req.params.softwareId);
     const result = await db.execute({
       sql: `SELECT c.*, u.username FROM comments c 
             JOIN users u ON c.user_id = u.id 

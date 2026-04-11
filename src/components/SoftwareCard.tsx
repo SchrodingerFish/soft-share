@@ -15,6 +15,7 @@ export interface Software {
   version: string;
   platforms: string[];
   category: string;
+  category_en?: string;
   size: string;
   update_date: string;
   description: string;
@@ -28,7 +29,7 @@ export interface Software {
   tutorial?: string;
   verification_code?: string;
   related?: Software[];
-  tags?: { name: string; color: string }[];
+  tags?: { name: string; name_en?: string; color: string }[];
 }
 
 export const SoftwareCard = React.memo(({ software, onDownload }: { software: Software; onDownload: (id: number) => void }) => {
@@ -121,8 +122,32 @@ export const SoftwareCard = React.memo(({ software, onDownload }: { software: So
               </Badge>
             )}
             <CardDescription className="flex items-center gap-2 flex-wrap">
-              <Badge variant="secondary">{software.version}</Badge>
-              <span className="text-xs">{software.size}</span>
+              <Badge variant="secondary" className="font-mono text-[10px]">{software.version}</Badge>
+              <span className="text-[10px] text-muted-foreground font-medium">{software.size}</span>
+              <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-5 bg-muted/30 border-muted-foreground/20">
+                {lang === 'zh' ? software.category : (software.category_en || software.category)}
+              </Badge>
+              {Array.isArray(software.tags) && software.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {software.tags.slice(0, 3).map(tag => (
+                    <Badge 
+                      key={tag.name} 
+                      variant="outline" 
+                      style={{ 
+                        borderColor: `${tag.color}40`, 
+                        color: tag.color,
+                        backgroundColor: `${tag.color}10`
+                      }}
+                      className="text-[9px] py-0 px-1.5 h-4 font-medium"
+                    >
+                      {lang === 'zh' ? tag.name : (tag.name_en || tag.name)}
+                    </Badge>
+                  ))}
+                  {software.tags.length > 3 && (
+                    <span className="text-[9px] text-muted-foreground">+{software.tags.length - 3}</span>
+                  )}
+                </div>
+              )}
             </CardDescription>
           </div>
           <Button 
@@ -143,11 +168,6 @@ export const SoftwareCard = React.memo(({ software, onDownload }: { software: So
             <Badge key={p} variant="outline" className="flex items-center gap-1">
               <PlatformIcon platform={p} />
               {p}
-            </Badge>
-          ))}
-          {software.tags && software.tags.map(tag => (
-            <Badge key={tag.name} variant="outline" style={{ borderColor: tag.color, color: tag.color }}>
-              {tag.name}
             </Badge>
           ))}
         </div>

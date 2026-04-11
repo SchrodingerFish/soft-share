@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAppStore, useAuthStore } from "./store";
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
+import { useInView } from 'react-intersection-observer';
 import { useDebounce } from './lib/hooks/useDebounce';
 import { translations } from "./i18n";
 import { fetchApi } from "./lib/api";
@@ -28,6 +29,7 @@ import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, Pagi
 import { Moon, Sun, Globe, Search, User, LogOut, Heart, Filter, Sparkles, Scale, Plus, Bell } from "lucide-react";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner";
+import { io } from "socket.io-client";
 
 const PLATFORMS = ["Windows", "macOS", "Android"];
 
@@ -96,16 +98,15 @@ export default function App() {
   const lang = useAppStore(state => state.lang);
   const setTheme = useAppStore(state => state.setTheme);
   const setLang = useAppStore(state => state.setLang);
+  const setCategories = useAppStore(state => state.setCategories);
 
   const user = useAuthStore(state => state.user);
   const logout = useAuthStore(state => state.logout);
   const setFavoriteIds = useAuthStore(state => state.setFavoriteIds);
   const unreadCount = useAuthStore(state => state.unreadCount);
-  const setCategories = useAppStore(state => state.setCategories);
   const setUnreadCount = useAuthStore(state => state.setUnreadCount);
 
   const t = translations[lang];
-  const queryClient = useQueryClient();
 
   const [softwareList, setSoftwareList] = useState<Software[]>([]);
   const [total, setTotal] = useState(0);
@@ -149,7 +150,7 @@ export default function App() {
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
-      const res = await fetchApi<{ id: number; name: string; description: string }[]>("/categories");
+      const res = await fetchApi<{ id: number; name: string; name_en: string; description: string }[]>("/categories");
       if (res.code !== 0) throw new Error(res.message || "Failed to fetch categories");
       return res.data;
     }
@@ -175,6 +176,26 @@ export default function App() {
           setUnreadCount(res.data.unreadCount);
         }
       });
+
+      // Socket.io connection for real-time notifications
+      const socket = io(window.location.origin);
+
+      socket.on("connect", () => {
+        console.log("Connected to WebSocket");
+        socket.emit("join", user.id.toString());
+      });
+
+      socket.on("notification", (data: any) => {
+        toast.info(data.title, {
+          description: data.content,
+          duration: 5000,
+        });
+        setUnreadCount(useAuthStore.getState().unreadCount + 1);
+      });
+
+      return () => {
+        socket.disconnect();
+      };
     }
   }, [user, setFavoriteIds, setUnreadCount]);
 
@@ -204,29 +225,47 @@ export default function App() {
   const [downloadModalOpen, setDownloadModalOpen] = useState(false);
   const [selectedSoftwareId, setSelectedSoftwareId] = useState<number | null>(null);
 
-  const { data: softwareData, isLoading: isSoftwareLoading } = useQuery({
-    queryKey: ['software', page, limit, search, category, platform, showFavorites, user],
-    queryFn: async () => {
+  const { ref: loadMoreRef, inView } = useInView();
+
+  const { 
+    data: softwareData, 
+    isLoading: isSoftwareLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useInfiniteQuery({
+    queryKey: ['software', limit, search, category, platform, showFavorites, user],
+    queryFn: async ({ pageParam = 1 }) => {
       if (showFavorites) {
-        if (!user) return { items: [], total: 0 };
+        if (!user) return { items: [], total: 0, nextPage: undefined };
         const res = await fetchApi<Software[]>("/favorites");
         if (res.code !== 0) throw new Error(res.message || "Failed to load favorites");
-        return { items: res.data, total: res.data.length };
+        return { items: res.data, total: res.data.length, nextPage: undefined };
       } else {
         const res = await fetchApi<{ items: Software[], total: number }>(
-          `/software?page=${page}&limit=${limit}&search=${search}&category=${category}&platform=${platform}`
+          `/software?page=${pageParam}&limit=${limit}&search=${search}&category=${category}&platform=${platform}`
         );
         if (res.code !== 0) throw new Error(res.message || "Failed to load software list");
-        return res.data;
+        const hasMore = pageParam * limit < res.data.total;
+        return { ...res.data, nextPage: hasMore ? pageParam + 1 : undefined };
       }
     },
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+    initialPageParam: 1,
     enabled: !showAdmin && !showCollections && !detailId && !showAI && !showRankings && !showSubmit && !showUserCenter && compareIds.length < 2
   });
 
   useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  useEffect(() => {
     if (softwareData) {
-      setSoftwareList(softwareData.items);
-      setTotal(softwareData.total);
+      const allItems = softwareData.pages.flatMap(page => page.items);
+      setSoftwareList(allItems);
+      setTotal(softwareData.pages[0]?.total || 0);
     }
   }, [softwareData]);
 
@@ -235,9 +274,9 @@ export default function App() {
   // Sync softwareList with favorites when in "showFavorites" mode
   useEffect(() => {
     if (showFavorites && user && softwareList.length === 0) {
-      queryClient.invalidateQueries({ queryKey: ['favorites'] });
+      // Data is handled by react-query, no need for manual loadData
     }
-  }, [showFavorites, user, softwareList.length, queryClient]);
+  }, [showFavorites, user]);
 
   const handleDownload = useCallback((id: number) => {
     setSelectedSoftwareId(id);
@@ -282,7 +321,7 @@ export default function App() {
           </Button>
           {categories.map(c => (
             <Button key={c.name} variant={category === c.name ? "default" : "ghost"} className="w-full justify-start" onClick={() => updateParams({ category: c.name, page: "1" })}>
-              {c.name}
+              {lang === 'zh' ? c.name : (c.name_en || c.name)}
             </Button>
           ))}
         </div>
@@ -434,7 +473,7 @@ export default function App() {
               onBack={() => updateParams({ compare: null })}
             />
           ) : detailId ? (
-            <SoftwareDetail id={parseInt(detailId)} onBack={() => updateParams({ detail: null })} onDownload={handleDownload} />
+            <SoftwareDetail id={parseInt(detailId)} onBack={() => updateParams({ detail: null })} onDownload={handleDownload} onDetail={handleViewDetail} />
           ) : (
             <>
               <div className="flex justify-between items-center mb-6">
@@ -501,73 +540,19 @@ export default function App() {
               {!showFavorites && !category && !platform && !search && page === 1 && (
                 <Recommendations onDownload={handleDownload} onDetail={handleViewDetail} />
               )}
-
-              {/* Pagination */}
-              {!showFavorites && totalPages > 1 && (
-                <div className="mt-12 flex justify-center">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationFirst 
-                          text={t.first_page}
-                          onClick={() => updateParams({ page: "1" })} 
-                          className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                        />
-                      </PaginationItem>
-                      <PaginationItem>
-                        <PaginationPrevious 
-                          text={t.prev_page}
-                          onClick={() => updateParams({ page: Math.max(1, page - 1).toString() })} 
-                          className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                        />
-                      </PaginationItem>
-                      
-                      {/* Page Numbers */}
-                      {Array.from({ length: totalPages }, (_, i) => i + 1)
-                        .filter(p => {
-                          // Show current page, first, last, and 1 page around current
-                          return p === 1 || p === totalPages || Math.abs(p - page) <= 1;
-                        })
-                        .map((p, i, arr) => {
-                          const elements = [];
-                          // Add ellipsis if there's a gap
-                          if (i > 0 && p - arr[i - 1] > 1) {
-                            elements.push(
-                              <PaginationItem key={`ellipsis-${p}`}>
-                                <PaginationEllipsis />
-                              </PaginationItem>
-                            );
-                          }
-                          elements.push(
-                            <PaginationItem key={p}>
-                              <PaginationLink 
-                                isActive={p === page} 
-                                onClick={() => updateParams({ page: p.toString() })}
-                                className="cursor-pointer"
-                              >
-                                {p}
-                              </PaginationLink>
-                            </PaginationItem>
-                          );
-                          return elements;
-                        })}
-
-                      <PaginationItem>
-                        <PaginationNext 
-                          text={t.next_page}
-                          onClick={() => updateParams({ page: Math.min(totalPages, page + 1).toString() })}
-                          className={page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                        />
-                      </PaginationItem>
-                      <PaginationItem>
-                        <PaginationLast 
-                          text={t.last_page}
-                          onClick={() => updateParams({ page: totalPages.toString() })} 
-                          className={page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
+              {/* Infinite Scroll Loader */}
+              {!showFavorites && (
+                <div ref={loadMoreRef} className="mt-12 flex justify-center py-8">
+                  {isFetchingNextPage ? (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      Loading more...
+                    </div>
+                  ) : hasNextPage ? (
+                    <div className="text-muted-foreground text-sm">Scroll for more</div>
+                  ) : softwareList.length > 0 ? (
+                    <div className="text-muted-foreground text-sm">No more software to load</div>
+                  ) : null}
                 </div>
               )}
             </>

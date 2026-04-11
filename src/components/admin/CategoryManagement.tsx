@@ -11,6 +11,7 @@ import { toast } from "sonner";
 interface Category {
   id: number;
   name: string;
+  name_en: string;
   description: string;
 }
 
@@ -114,7 +115,8 @@ export const CategoryManagement: React.FC = () => {
         <table className="w-full text-sm">
           <thead className="bg-muted/50 border-b">
             <tr>
-              <th className="px-4 py-3 text-left font-medium">{t.category_name}</th>
+              <th className="px-4 py-3 text-left font-medium">{t.category_name} (ZH)</th>
+              <th className="px-4 py-3 text-left font-medium">{t.category_name} (EN)</th>
               <th className="px-4 py-3 text-left font-medium">{t.category_desc}</th>
               <th className="px-4 py-3 text-right font-medium">{t.actions}</th>
             </tr>
@@ -123,6 +125,7 @@ export const CategoryManagement: React.FC = () => {
             {categories.map((c) => (
               <tr key={c.id} className="hover:bg-muted/30 transition-colors">
                 <td className="px-4 py-3 font-medium">{c.name}</td>
+                <td className="px-4 py-3 text-muted-foreground">{c.name_en}</td>
                 <td className="px-4 py-3 text-muted-foreground">{c.description}</td>
                 <td className="px-4 py-3 text-right space-x-2">
                   <Button variant="ghost" size="icon" onClick={() => openEdit(c)}>
@@ -152,10 +155,17 @@ export const CategoryManagement: React.FC = () => {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">{t.category_name}</label>
+                <label className="text-sm font-medium">{t.category_name} (ZH)</label>
                 <Input 
                   value={currentCategory.name || ""} 
                   onChange={(e) => setCurrentCategory({...currentCategory, name: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t.category_name} (EN)</label>
+                <Input 
+                  value={currentCategory.name_en || ""} 
+                  onChange={(e) => setCurrentCategory({...currentCategory, name_en: e.target.value})}
                 />
               </div>
               <div className="space-y-2">

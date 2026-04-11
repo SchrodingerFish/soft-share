@@ -150,7 +150,8 @@ async function initDb() {
         download_url TEXT,
         link_status TEXT DEFAULT 'valid',
         version_history TEXT,
-        tutorial TEXT
+        tutorial TEXT,
+        tags TEXT DEFAULT '[]'
       );`
     : `CREATE TABLE IF NOT EXISTS software (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -166,21 +167,26 @@ async function initDb() {
         download_url TEXT,
         link_status TEXT DEFAULT 'valid',
         version_history TEXT,
-        tutorial TEXT
+        tutorial TEXT,
+        tags TEXT DEFAULT '[]'
       );`;
 
   const collectionsTable = isPostgres
     ? `CREATE TABLE IF NOT EXISTS collections (
         id SERIAL PRIMARY KEY,
         title TEXT,
+        title_en TEXT,
         description TEXT,
+        description_en TEXT,
         cover_image TEXT,
         software_ids TEXT
       );`
     : `CREATE TABLE IF NOT EXISTS collections (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT,
+        title_en TEXT,
         description TEXT,
+        description_en TEXT,
         cover_image TEXT,
         software_ids TEXT
       );`;
@@ -231,6 +237,9 @@ async function initDb() {
     try {
       await client.execute("ALTER TABLE software ADD COLUMN verification_code TEXT DEFAULT ''");
     } catch (e) {}
+    try {
+      await client.execute("ALTER TABLE software ADD COLUMN tags TEXT DEFAULT '[]'");
+    } catch (e) {}
     await client.execute(collectionsTable);
     await client.execute(favoritesTable);
     try {
@@ -243,11 +252,13 @@ async function initDb() {
       ? `CREATE TABLE IF NOT EXISTS categories (
           id SERIAL PRIMARY KEY,
           name TEXT UNIQUE,
+          name_en TEXT,
           description TEXT
         );`
       : `CREATE TABLE IF NOT EXISTS categories (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT UNIQUE,
+          name_en TEXT,
           description TEXT
         );`;
         
@@ -255,16 +266,30 @@ async function initDb() {
       ? `CREATE TABLE IF NOT EXISTS tags (
           id SERIAL PRIMARY KEY,
           name TEXT UNIQUE,
+          name_en TEXT,
           color TEXT
         );`
       : `CREATE TABLE IF NOT EXISTS tags (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT UNIQUE,
+          name_en TEXT,
           color TEXT
         );`;
         
     await client.execute(categoriesTable);
+    try {
+      await client.execute("ALTER TABLE categories ADD COLUMN name_en TEXT");
+    } catch (e) {}
     await client.execute(tagsTable);
+    try {
+      await client.execute("ALTER TABLE tags ADD COLUMN name_en TEXT");
+    } catch (e) {}
+    try {
+      await client.execute("ALTER TABLE collections ADD COLUMN title_en TEXT");
+    } catch (e) {}
+    try {
+      await client.execute("ALTER TABLE collections ADD COLUMN description_en TEXT");
+    } catch (e) {}
 
     // New tables for community features
     const commentsTable = isPostgres
@@ -363,7 +388,7 @@ async function initDb() {
       console.log("[DB] Seeding initial data...");
       const seedData = [
         {
-          name: "Visual Studio Code", version: "1.85.0", platforms: '["Windows", "macOS", "Android"]', category: "Dev",
+          name: "Visual Studio Code", version: "1.85.0", platforms: '["Windows", "macOS", "Android"]', category: "开发",
           size: "90 MB", update_date: "2023-12-01", description: "A powerful, lightweight code editor.",
           screenshots: '["https://picsum.photos/seed/vscode1/800/600", "https://picsum.photos/seed/vscode2/800/600"]',
           popularity: 9999, download_url: "https://code.visualstudio.com/download",
@@ -371,35 +396,35 @@ async function initDb() {
           tutorial: "## VS Code Tutorial\n\n1. Download and install.\n2. Open your project folder.\n3. Install extensions like Prettier or ESLint."
         },
         {
-          name: "Google Chrome", version: "120.0.0", platforms: '["Windows", "macOS", "Android"]', category: "System",
+          name: "Google Chrome", version: "120.0.0", platforms: '["Windows", "macOS", "Android"]', category: "系统",
           size: "120 MB", update_date: "2023-11-28", description: "Fast, secure, and free web browser.",
           screenshots: '["https://picsum.photos/seed/chrome1/800/600"]',
           popularity: 8500, download_url: "https://www.google.com/chrome/",
           version_history: '[]', tutorial: "Just install and browse!"
         },
         {
-          name: "VLC Media Player", version: "3.0.20", platforms: '["Windows", "macOS", "Android"]', category: "Media",
+          name: "VLC Media Player", version: "3.0.20", platforms: '["Windows", "macOS", "Android"]', category: "媒体",
           size: "40 MB", update_date: "2023-10-15", description: "Free and open source cross-platform multimedia player.",
           screenshots: '["https://picsum.photos/seed/vlc1/800/600"]',
           popularity: 7200, download_url: "https://www.videolan.org/vlc/",
           version_history: '[]', tutorial: "Supports all formats."
         },
         {
-          name: "Figma", version: "116.3.0", platforms: '["Windows", "macOS"]', category: "Design",
+          name: "Figma", version: "116.3.0", platforms: '["Windows", "macOS"]', category: "设计",
           size: "150 MB", update_date: "2023-11-10", description: "Collaborative interface design tool.",
           screenshots: '["https://picsum.photos/seed/figma1/800/600"]',
           popularity: 6800, download_url: "https://www.figma.com/downloads/",
           version_history: '[]', tutorial: "Design together."
         },
         {
-          name: "Notion", version: "2.23.0", platforms: '["Windows", "macOS", "Android"]', category: "Productivity",
+          name: "Notion", version: "2.23.0", platforms: '["Windows", "macOS", "Android"]', category: "办公",
           size: "85 MB", update_date: "2023-12-05", description: "All-in-one workspace for your notes, tasks, wikis, and databases.",
           screenshots: '["https://picsum.photos/seed/notion1/800/600"]',
           popularity: 5400, download_url: "https://www.notion.so/desktop",
           version_history: '[]', tutorial: "Organize everything."
         },
         {
-          name: "Postman", version: "10.20.0", platforms: '["Windows", "macOS"]', category: "Dev",
+          name: "Postman", version: "10.20.0", platforms: '["Windows", "macOS"]', category: "开发",
           size: "110 MB", update_date: "2023-11-20", description: "API platform for building and using APIs.",
           screenshots: '["https://picsum.photos/seed/postman1/800/600"]',
           popularity: 4900, download_url: "https://www.postman.com/downloads/",
@@ -422,51 +447,55 @@ async function initDb() {
       // Seed collections
       const collectionData = [
         {
-          title: "Developer Essentials",
-          description: "Must-have tools for every software engineer.",
+          title: "开发者必备",
+          title_en: "Developer Essentials",
+          description: "每个软件工程师必备的工具。",
+          description_en: "Must-have tools for every software engineer.",
           cover_image: "https://picsum.photos/seed/devcol/1200/600",
           software_ids: "[1, 6]"
         },
         {
-          title: "Productivity Boosters",
-          description: "Stay organized and get more done.",
+          title: "效率提升利器",
+          title_en: "Productivity Boosters",
+          description: "保持专注，高效工作。",
+          description_en: "Stay organized and get more done.",
           cover_image: "https://picsum.photos/seed/prodcol/1200/600",
           software_ids: "[5, 2]"
         }
       ];
 
       const colStatements = collectionData.map(c => ({
-        sql: "INSERT INTO collections (title, description, cover_image, software_ids) VALUES (?, ?, ?, ?)",
-        args: [c.title, c.description, c.cover_image, c.software_ids]
+        sql: "INSERT INTO collections (title, title_en, description, description_en, cover_image, software_ids) VALUES (?, ?, ?, ?, ?, ?)",
+        args: [c.title, c.title_en, c.description, c.description_en, c.cover_image, c.software_ids]
       }));
 
       await client.batch(colStatements, "write");
       
       // Seed categories
       const categoryData = [
-        { name: "Dev", description: "Development tools" },
-        { name: "System", description: "System utilities" },
-        { name: "Download", description: "Download managers" },
-        { name: "Media", description: "Media players and editors" },
-        { name: "Productivity", description: "Office and productivity" },
-        { name: "Design", description: "Design and graphics" }
+        { name: "开发", name_en: "Dev", description: "开发工具" },
+        { name: "系统", name_en: "System", description: "系统工具" },
+        { name: "下载", name_en: "Download", description: "下载工具" },
+        { name: "媒体", name_en: "Media", description: "媒体播放与编辑" },
+        { name: "办公", name_en: "Productivity", description: "办公与效率" },
+        { name: "设计", name_en: "Design", description: "设计与图形" }
       ];
       const catStatements = categoryData.map(c => ({
-        sql: "INSERT INTO categories (name, description) VALUES (?, ?)",
-        args: [c.name, c.description]
+        sql: "INSERT INTO categories (name, name_en, description) VALUES (?, ?, ?)",
+        args: [c.name, c.name_en, c.description]
       }));
       await client.batch(catStatements, "write");
 
       // Seed tags
       const tagData = [
-        { name: "Open Source", color: "green" },
-        { name: "Free", color: "blue" },
-        { name: "Cross-platform", color: "purple" },
-        { name: "Essential", color: "red" }
+        { name: "开源", name_en: "Open Source", color: "green" },
+        { name: "免费", name_en: "Free", color: "blue" },
+        { name: "跨平台", name_en: "Cross-platform", color: "purple" },
+        { name: "必备", name_en: "Essential", color: "red" }
       ];
       const tagStatements = tagData.map(t => ({
-        sql: "INSERT INTO tags (name, color) VALUES (?, ?)",
-        args: [t.name, t.color]
+        sql: "INSERT INTO tags (name, name_en, color) VALUES (?, ?, ?)",
+        args: [t.name, t.name_en, t.color]
       }));
       await client.batch(tagStatements, "write");
       

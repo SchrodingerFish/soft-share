@@ -18,16 +18,21 @@ export const softwareSchema = z.object({
   body: z.object({
     name: z.string().min(1, 'Name is required'),
     version: z.string().min(1, 'Version is required'),
-    platforms: z.array(z.string()).optional().default([]),
+    platforms: z.array(z.string()).optional().nullable().default([]),
     category: z.string().min(1, 'Category is required'),
-    size: z.string().optional(),
-    update_date: z.string().optional(),
-    description: z.string().optional(),
-    screenshots: z.array(z.string()).optional().default([]),
-    popularity: z.number().optional().default(0),
-    download_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
-    version_history: z.array(z.any()).optional().default([]),
-    tutorial: z.string().optional(),
+    size: z.string().optional().nullable(),
+    update_date: z.string().optional().nullable(),
+    description: z.string().optional().nullable(),
+    screenshots: z.array(z.string()).optional().nullable().default([]),
+    popularity: z.number().optional().nullable().default(0),
+    download_url: z.string().optional().nullable().or(z.literal('')),
+    version_history: z.array(z.any()).optional().nullable().default([]),
+    tutorial: z.string().optional().nullable(),
+    tags: z.array(z.object({
+      name: z.string(),
+      name_en: z.string().optional().nullable(),
+      color: z.string().optional().nullable().default('gray')
+    })).optional().nullable().default([]),
   }),
 });
 

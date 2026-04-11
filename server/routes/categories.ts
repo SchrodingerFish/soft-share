@@ -17,13 +17,13 @@ router.get("/", async (req, res) => {
 
 router.post("/", authenticate, isAdmin, async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, name_en, description } = req.body;
     if (!name) {
       return res.json({ code: 400, message: "Name is required" });
     }
     const result = await db.execute({
-      sql: "INSERT INTO categories (name, description) VALUES (?, ?)",
-      args: [name, description || ""]
+      sql: "INSERT INTO categories (name, name_en, description) VALUES (?, ?, ?)",
+      args: [name, name_en || name, description || ""]
     });
     res.json({ code: 0, message: "success" });
   } catch (err: any) {
@@ -33,14 +33,14 @@ router.post("/", authenticate, isAdmin, async (req, res) => {
 
 router.put("/:id", authenticate, isAdmin, async (req, res) => {
   try {
-    const { id } = req.params;
-    const { name, description } = req.body;
+    const id = parseInt(req.params.id);
+    const { name, name_en, description } = req.body;
     if (!name) {
       return res.json({ code: 400, message: "Name is required" });
     }
     const result = await db.execute({
-      sql: "UPDATE categories SET name = ?, description = ? WHERE id = ?",
-      args: [name, description || "", id]
+      sql: "UPDATE categories SET name = ?, name_en = ?, description = ? WHERE id = ?",
+      args: [name, name_en || name, description || "", id]
     });
     res.json({ code: 0, message: "success" });
   } catch (err: any) {
@@ -50,7 +50,7 @@ router.put("/:id", authenticate, isAdmin, async (req, res) => {
 
 router.delete("/:id", authenticate, isAdmin, async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = parseInt(req.params.id);
     const result = await db.execute({
       sql: "DELETE FROM categories WHERE id = ?",
       args: [id]

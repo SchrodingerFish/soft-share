@@ -10,6 +10,7 @@ import { toast } from "sonner";
 interface Tag {
   id: number;
   name: string;
+  name_en: string;
   color: string;
 }
 
@@ -113,7 +114,8 @@ export const TagManagement: React.FC = () => {
         <table className="w-full text-sm">
           <thead className="bg-muted/50 border-b">
             <tr>
-              <th className="px-4 py-3 text-left font-medium">{t.tag_name}</th>
+              <th className="px-4 py-3 text-left font-medium">{t.tag_name} (ZH)</th>
+              <th className="px-4 py-3 text-left font-medium">{t.tag_name} (EN)</th>
               <th className="px-4 py-3 text-left font-medium">{t.tag_color}</th>
               <th className="px-4 py-3 text-right font-medium">{t.actions}</th>
             </tr>
@@ -122,6 +124,7 @@ export const TagManagement: React.FC = () => {
             {tags.map((t) => (
               <tr key={t.id} className="hover:bg-muted/30 transition-colors">
                 <td className="px-4 py-3 font-medium">{t.name}</td>
+                <td className="px-4 py-3 text-muted-foreground">{t.name_en}</td>
                 <td className="px-4 py-3 text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 rounded-full" style={{ backgroundColor: t.color }} />
@@ -156,10 +159,17 @@ export const TagManagement: React.FC = () => {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">{t.tag_name}</label>
+                <label className="text-sm font-medium">{t.tag_name} (ZH)</label>
                 <Input 
                   value={currentTag.name || ""} 
                   onChange={(e) => setCurrentTag({...currentTag, name: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t.tag_name} (EN)</label>
+                <Input 
+                  value={currentTag.name_en || ""} 
+                  onChange={(e) => setCurrentTag({...currentTag, name_en: e.target.value})}
                 />
               </div>
               <div className="space-y-2">

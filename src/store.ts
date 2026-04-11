@@ -54,11 +54,11 @@ interface AppState {
   theme: 'light' | 'dark';
   lang: 'zh' | 'en';
   aiConfig: AIConfig;
-  categories: { id: number; name: string; description: string }[];
+  categories: { id: number; name: string; name_en?: string; description: string }[];
   setTheme: (theme: 'light' | 'dark') => void;
   setLang: (lang: 'zh' | 'en') => void;
   setAIConfig: (config: AIConfig) => void;
-  setCategories: (categories: { id: number; name: string; description: string }[]) => void;
+  setCategories: (categories: { id: number; name: string; name_en?: string; description: string }[]) => void;
 }
 
 export const useAppStore = create<AppState>((set) => {

@@ -14,6 +14,7 @@ interface Submission {
   version: string;
   platforms: string;
   category: string;
+  category_en?: string;
   size: string;
   description: string;
   download_url: string;
@@ -81,7 +82,9 @@ export const SubmissionManagement: React.FC = () => {
               <tr key={s.id} className="hover:bg-muted/30 transition-colors">
                 <td className="px-4 py-3">
                   <div className="font-medium">{s.name}</div>
-                  <div className="text-xs text-muted-foreground">{s.category} | {s.version}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {lang === 'zh' ? s.category : (s.category_en || s.category)} | {s.version}
+                  </div>
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">{s.username}</td>
                 <td className="px-4 py-3">
