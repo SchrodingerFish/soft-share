@@ -17,13 +17,14 @@ export const SoftwareSubmission: React.FC<{ onBack: () => void }> = ({ onBack })
     name: "",
     version: "",
     platforms: ["Windows"],
-    category: categories.length > 0 ? categories[0].name : "Dev",
-    size: "",
+    category: categories.length > 0 ? (lang === 'zh' ? categories[0].name : (categories[0].name_en || categories[0].name)) : "Dev",
     description: "",
-    download_url: ""
+    download_url: "",
+    size: ""
   });
   const [loading, setLoading] = useState(false);
 
+  // ... (inside handleSubmit)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.download_url) {
@@ -34,7 +35,11 @@ export const SoftwareSubmission: React.FC<{ onBack: () => void }> = ({ onBack })
     try {
       const res = await fetchApi("/submissions", {
         method: "POST",
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          // Ensure category is sent as the base name for backend consistency if needed
+          category: categories.find(c => (lang === 'zh' ? c.name : (c.name_en || c.name)) === formData.category)?.name || formData.category
+        })
       });
       if (res.code === 0) {
         toast.success(t.submission_success);
@@ -91,13 +96,8 @@ export const SoftwareSubmission: React.FC<{ onBack: () => void }> = ({ onBack })
               </SelectTrigger>
               <SelectContent>
                 {categories.map(c => (
-                  <SelectItem key={c.id} value={c.name}>
-                    <div className="flex items-center justify-between w-full gap-2">
-                      <span>{c.name}</span>
-                      {c.name_en && (
-                        <span className="text-xs text-muted-foreground">({c.name_en})</span>
-                      )}
-                    </div>
+                  <SelectItem key={c.id} value={lang === 'zh' ? c.name : (c.name_en || c.name)}>
+                    {lang === 'zh' ? c.name : (c.name_en || c.name)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -108,7 +108,7 @@ export const SoftwareSubmission: React.FC<{ onBack: () => void }> = ({ onBack })
             <Input 
               value={formData.size}
               onChange={(e) => setFormData({...formData, size: e.target.value})}
-              placeholder="e.g. 50 MB"
+              placeholder={t.size}
             />
           </div>
         </div>
@@ -130,7 +130,7 @@ export const SoftwareSubmission: React.FC<{ onBack: () => void }> = ({ onBack })
             rows={4}
             value={formData.description}
             onChange={(e) => setFormData({...formData, description: e.target.value})}
-            placeholder="Describe the software..."
+            placeholder={t.description_placeholder}
           />
         </div>
 

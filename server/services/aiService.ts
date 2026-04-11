@@ -185,7 +185,7 @@ class AIService {
     }
   }
 
-  async recommendSoftware(userQuery: string, softwareList: any[], config: AIConfig) {
+  async recommendSoftware(userQuery: string, softwareList: any[], config: AIConfig, lang: string = "zh") {
     const context = softwareList.map(s => ({
       id: s.id,
       name: s.name,
@@ -194,11 +194,15 @@ class AIService {
       platforms: s.platforms
     }));
 
+    const langInstruction = lang === "zh" ? "Please respond in Chinese." : "Please respond in English.";
+
     const prompt = `You are a professional software consultant. Based on the following software library, recommend the best tools for the user's request.
     
     Library: ${JSON.stringify(context)}
     
     User Request: "${userQuery}"
+    
+    ${langInstruction}
     
     Return a JSON object with:
     - recommendation: A brief explanation of why these are recommended.
@@ -208,8 +212,11 @@ class AIService {
     return this.callAI(prompt, config);
   }
 
-  async generateSoftwareDetails(name: string, config: AIConfig) {
+  async generateSoftwareDetails(name: string, config: AIConfig, lang: string = "zh") {
+    const langInstruction = lang === "zh" ? "Please respond in Chinese." : "Please respond in English.";
     const prompt = `Generate professional software details for a software named "${name}".
+    
+    ${langInstruction}
     
     Return a JSON object with:
     - description: A professional description (around 100 words).
@@ -221,11 +228,14 @@ class AIService {
     return this.callAI(prompt, config);
   }
 
-  async compareSoftware(softwareA: any, softwareB: any, config: AIConfig) {
+  async compareSoftware(softwareA: any, softwareB: any, config: AIConfig, lang: string = "zh") {
+    const langInstruction = lang === "zh" ? "Please respond in Chinese." : "Please respond in English.";
     const prompt = `Compare these two software items and provide a detailed analysis.
     
     Software A: ${JSON.stringify(softwareA)}
     Software B: ${JSON.stringify(softwareB)}
+    
+    ${langInstruction}
     
     Return a JSON object with:
     - comparisonTable: An array of objects for a comparison table (feature, softwareAValue, softwareBValue).
@@ -235,7 +245,8 @@ class AIService {
     return this.callAI(prompt, config);
   }
 
-  async summarizeSoftware(software: any, config: AIConfig) {
+  async summarizeSoftware(software: any, config: AIConfig, lang: string = "zh") {
+    const langInstruction = lang === "zh" ? "Please respond in Chinese." : "Please respond in English.";
     const prompt = `Provide a concise AI summary for the following software. Focus on its core value proposition and unique features.
     
     Software Info: ${JSON.stringify({
@@ -244,6 +255,8 @@ class AIService {
       category: software.category,
       version: software.version
     })}
+    
+    ${langInstruction}
     
     Return a JSON object with:
     - summary: A concise summary (around 50-80 words).

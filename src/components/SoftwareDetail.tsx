@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { useAuthStore } from "../store";
 import { aiService } from "../services/aiService";
 import { Helmet } from "react-helmet-async";
+import remarkGfm from "remark-gfm";
 
 export const SoftwareDetail: React.FC<{ 
   id: number; 
@@ -67,7 +68,7 @@ export const SoftwareDetail: React.FC<{
   const handleToggleAi = () => {
     if (!isAiExpanded && !aiSummary && !loadingSummary && software) {
       setLoadingSummary(true);
-      aiService.summarizeSoftware(software)
+      aiService.summarizeSoftware(software, lang)
         .then(summary => setAiSummary(summary))
         .catch(err => {
           console.error("AI Summary failed:", err);
@@ -108,7 +109,7 @@ export const SoftwareDetail: React.FC<{
   };
 
   if (loading) return <div className="py-20 text-center">Loading...</div>;
-  if (!software) return <div className="py-20 text-center">Software not found</div>;
+  if (!software) return <div className="py-20 text-center">{t.no_data || "Software not found"}</div>;
 
   const PlatformIcon = ({ platform }: { platform: string }) => {
     if (platform === "Windows") return <Monitor className="w-4 h-4" />;
@@ -243,7 +244,7 @@ export const SoftwareDetail: React.FC<{
                       </div>
                     ) : (
                       <div className="text-sm text-muted-foreground text-center py-4">
-                        Failed to load AI summary.
+                        {t.network_error || "Failed to load AI summary."}
                       </div>
                     )}
                   </div>
@@ -282,7 +283,7 @@ export const SoftwareDetail: React.FC<{
                 {t.tutorial || 'Tutorial'}
               </h3>
               <div className="markdown-body prose prose-sm dark:prose-invert max-w-none bg-muted/30 p-6 rounded-xl border">
-                <Markdown>{software.tutorial}</Markdown>
+                <Markdown remarkPlugins={[remarkGfm]}>{software.tutorial}</Markdown>
               </div>
             </div>
           )}

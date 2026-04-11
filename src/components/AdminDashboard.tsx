@@ -22,7 +22,7 @@ export const AdminDashboard: React.FC = () => {
     { id: "software", label: t.software_management || "Software", icon: Package },
     { id: "collections", label: t.collection_management || "Collections", icon: Layers },
     { id: "categories", label: t.category_management || "Categories", icon: FolderTree },
-    { id: "tags", label: "Tags", icon: Tags },
+    { id: "tags", label: t.tags || "Tags", icon: Tags },
     { id: "submissions", label: t.submission_management || "Submissions", icon: Send },
     { id: "users", label: t.user_management || "Users", icon: Users },
   ] as const;

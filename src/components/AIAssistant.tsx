@@ -10,6 +10,7 @@ import { Sparkles, Send, Loader2, Bot } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "motion/react";
 import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export const AIAssistant: React.FC<{ onDownload: (id: number) => void }> = ({ onDownload }) => {
   const { lang } = useAppStore();
@@ -37,7 +38,7 @@ export const AIAssistant: React.FC<{ onDownload: (id: number) => void }> = ({ on
       if (allRes.code !== 0) throw new Error("Failed to fetch software list");
       
       // 2. Ask AI
-      const aiResult = await aiService.recommendSoftware(query, allRes.data.items);
+      const aiResult = await aiService.recommendSoftware(query, allRes.data.items, lang);
       
       // 3. Map IDs to actual software objects
       const recommendedSoftware = allRes.data.items.filter(s => aiResult.softwareIds.includes(s.id));
@@ -99,8 +100,8 @@ export const AIAssistant: React.FC<{ onDownload: (id: number) => void }> = ({ on
               <Loader2 className="h-16 w-16 animate-spin text-primary relative z-10" />
             </div>
             <div className="space-y-2 text-center">
-              <h3 className="text-xl font-semibold text-foreground">AI is analyzing your request</h3>
-              <p className="text-muted-foreground animate-pulse">Searching through our software database to find the perfect match...</p>
+              <h3 className="text-xl font-semibold text-foreground">{t.ai_analyzing}</h3>
+              <p className="text-muted-foreground animate-pulse">{t.ai_searching}</p>
             </div>
           </motion.div>
         )}
@@ -117,7 +118,7 @@ export const AIAssistant: React.FC<{ onDownload: (id: number) => void }> = ({ on
               <Bot className="h-8 w-8" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-xl font-bold">Oops! Something went wrong</h3>
+              <h3 className="text-xl font-bold">{t.oops_wrong}</h3>
               <p className="text-destructive/80">{error}</p>
             </div>
           </motion.div>
@@ -134,18 +135,18 @@ export const AIAssistant: React.FC<{ onDownload: (id: number) => void }> = ({ on
             <div className="bg-muted/50 p-6 rounded-2xl border border-primary/20 space-y-4">
               <div className="flex items-center gap-2 text-primary font-semibold">
                 <Sparkles className="h-5 w-5" />
-                AI Recommendation
+                {t.ai_recommendation}
               </div>
               <div className="markdown-body prose prose-sm dark:prose-invert max-w-none">
-                <Markdown>
+                <Markdown remarkPlugins={[remarkGfm]}>
                   {typeof result.recommendation === 'object' ? JSON.stringify(result.recommendation) : String(result.recommendation || "")}
                 </Markdown>
               </div>
               {result.tips && (
                 <div className="pt-4 border-t border-primary/10">
-                  <h4 className="font-semibold mb-2">Pro Tips:</h4>
+                  <h4 className="font-semibold mb-2">{t.pro_tips}</h4>
                   <div className="markdown-body prose prose-sm dark:prose-invert max-w-none italic text-muted-foreground">
-                    <Markdown>
+                    <Markdown remarkPlugins={[remarkGfm]}>
                       {typeof result.tips === 'object' ? JSON.stringify(result.tips) : String(result.tips || "")}
                     </Markdown>
                   </div>

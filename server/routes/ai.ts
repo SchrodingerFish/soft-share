@@ -6,8 +6,8 @@ const router = Router();
 
 router.post("/recommend", aiLimiter, async (req, res) => {
   try {
-    const { query, softwareList, config } = req.body;
-    const result = await aiService.recommendSoftware(query, softwareList, config);
+    const { query, softwareList, config, lang } = req.body;
+    const result = await aiService.recommendSoftware(query, softwareList, config, lang);
     res.json({ code: 0, message: "success", data: result });
   } catch (err: any) {
     res.json({ code: 500, message: err.message });
@@ -16,8 +16,8 @@ router.post("/recommend", aiLimiter, async (req, res) => {
 
 router.post("/generate-details", aiLimiter, async (req, res) => {
   try {
-    const { name, config } = req.body;
-    const result = await aiService.generateSoftwareDetails(name, config);
+    const { name, config, lang } = req.body;
+    const result = await aiService.generateSoftwareDetails(name, config, lang);
     res.json({ code: 0, message: "success", data: result });
   } catch (err: any) {
     res.json({ code: 500, message: err.message });
@@ -26,8 +26,8 @@ router.post("/generate-details", aiLimiter, async (req, res) => {
 
 router.post("/compare", aiLimiter, async (req, res) => {
   try {
-    const { softwareA, softwareB, config } = req.body;
-    const result = await aiService.compareSoftware(softwareA, softwareB, config);
+    const { softwareA, softwareB, config, lang } = req.body;
+    const result = await aiService.compareSoftware(softwareA, softwareB, config, lang);
     res.json({ code: 0, message: "success", data: result });
   } catch (err: any) {
     res.json({ code: 500, message: err.message });
@@ -36,8 +36,8 @@ router.post("/compare", aiLimiter, async (req, res) => {
 
 router.post("/summarize", aiLimiter, async (req, res) => {
   try {
-    const { software, config } = req.body;
-    const result = await aiService.summarizeSoftware(software, config);
+    const { software, config, lang } = req.body;
+    const result = await aiService.summarizeSoftware(software, config, lang);
     res.json({ code: 0, message: "success", data: result });
   } catch (err: any) {
     res.json({ code: 500, message: err.message });

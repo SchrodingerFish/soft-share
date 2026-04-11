@@ -254,7 +254,7 @@ export const SoftwareManagement: React.FC = () => {
                       if (!currentSoftware.name) return toast.error("Please enter a name first");
                       setLoading(true);
                       try {
-                        const details = await aiService.generateSoftwareDetails(currentSoftware.name);
+                        const details = await aiService.generateSoftwareDetails(currentSoftware.name, lang);
                         setCurrentSoftware({
                           ...currentSoftware,
                           description: details.description,

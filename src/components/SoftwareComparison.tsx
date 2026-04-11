@@ -8,6 +8,7 @@ import { Sparkles, Loader2, Scale, Check, X, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "motion/react";
 import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export const SoftwareComparison: React.FC<{ 
   softwareA: Software; 
@@ -28,7 +29,7 @@ export const SoftwareComparison: React.FC<{
     const loadComparison = async () => {
       setLoading(true);
       try {
-        const res = await aiService.compareSoftware(softwareA, softwareB);
+        const res = await aiService.compareSoftware(softwareA, softwareB, lang);
         setComparison(res);
       } catch (err: any) {
         toast.error(err.message || "Failed to generate comparison");
@@ -44,7 +45,7 @@ export const SoftwareComparison: React.FC<{
     return (
       <div className="py-20 flex flex-col items-center justify-center space-y-4">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="text-xl font-medium animate-pulse">AI is analyzing software features...</p>
+        <p className="text-xl font-medium animate-pulse">{t.ai_analyzing_features}</p>
       </div>
     );
   }
@@ -60,9 +61,9 @@ export const SoftwareComparison: React.FC<{
         <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-primary/10 text-primary mb-4">
           <Scale className="h-8 w-8" />
         </div>
-        <h2 className="text-3xl font-bold tracking-tight">AI Software Comparison</h2>
+        <h2 className="text-3xl font-bold tracking-tight">{t.ai_comparison_title}</h2>
         <p className="text-muted-foreground">
-          Comparing <span className="font-bold text-foreground">{softwareA.name}</span> vs <span className="font-bold text-foreground">{softwareB.name}</span>
+          {t.comparing} <span className="font-bold text-foreground">{softwareA.name}</span> {t.vs} <span className="font-bold text-foreground">{softwareB.name}</span>
         </p>
       </div>
 
@@ -70,7 +71,7 @@ export const SoftwareComparison: React.FC<{
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-muted/50">
-              <th className="p-4 font-semibold border-b">Feature</th>
+              <th className="p-4 font-semibold border-b">{t.feature}</th>
               <th className="p-4 font-semibold border-b text-center">{softwareA.name}</th>
               <th className="p-4 font-semibold border-b text-center">{softwareB.name}</th>
             </tr>
@@ -95,10 +96,10 @@ export const SoftwareComparison: React.FC<{
         <div className="bg-muted/30 p-8 rounded-2xl border space-y-4">
           <h3 className="text-xl font-bold flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
-            AI Analysis
+            {t.ai_analysis}
           </h3>
           <div className="markdown-body prose prose-sm dark:prose-invert max-w-none">
-            <Markdown>
+            <Markdown remarkPlugins={[remarkGfm]}>
               {typeof comparison?.analysis === 'object' ? JSON.stringify(comparison?.analysis) : String(comparison?.analysis || "")}
             </Markdown>
           </div>
@@ -107,10 +108,10 @@ export const SoftwareComparison: React.FC<{
         <div className="bg-primary/5 p-8 rounded-2xl border border-primary/20 space-y-4">
           <h3 className="text-xl font-bold flex items-center gap-2 text-primary">
             <Check className="h-5 w-5" />
-            AI Verdict
+            {t.ai_verdict}
           </h3>
           <div className="markdown-body prose prose-sm dark:prose-invert max-w-none">
-            <Markdown>
+            <Markdown remarkPlugins={[remarkGfm]}>
               {typeof comparison?.verdict === 'object' ? JSON.stringify(comparison?.verdict) : String(comparison?.verdict || "")}
             </Markdown>
           </div>

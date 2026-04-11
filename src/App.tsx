@@ -4,6 +4,7 @@ import { useAppStore, useAuthStore } from "./store";
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { useInView } from 'react-intersection-observer';
 import { useDebounce } from './lib/hooks/useDebounce';
+import { useNotifications } from './lib/hooks/useNotifications';
 import { translations } from "./i18n";
 import { fetchApi } from "./lib/api";
 import { Software, SoftwareCard } from "./components/SoftwareCard";
@@ -106,6 +107,9 @@ export default function App() {
   const unreadCount = useAuthStore(state => state.unreadCount);
   const setUnreadCount = useAuthStore(state => state.setUnreadCount);
 
+  // Initialize notifications hook
+  useNotifications(user?.id);
+
   const t = translations[lang];
 
   const [softwareList, setSoftwareList] = useState<Software[]>([]);
@@ -153,7 +157,9 @@ export default function App() {
       const res = await fetchApi<{ id: number; name: string; name_en: string; description: string }[]>("/categories");
       if (res.code !== 0) throw new Error(res.message || "Failed to fetch categories");
       return res.data;
-    }
+    },
+    staleTime: 1000 * 60 * 60, // 1 hour
+    gcTime: 1000 * 60 * 60 * 24 // 24 hours
   });
 
   useEffect(() => {
@@ -176,26 +182,6 @@ export default function App() {
           setUnreadCount(res.data.unreadCount);
         }
       });
-
-      // Socket.io connection for real-time notifications
-      const socket = io(window.location.origin);
-
-      socket.on("connect", () => {
-        console.log("Connected to WebSocket");
-        socket.emit("join", user.id.toString());
-      });
-
-      socket.on("notification", (data: any) => {
-        toast.info(data.title, {
-          description: data.content,
-          duration: 5000,
-        });
-        setUnreadCount(useAuthStore.getState().unreadCount + 1);
-      });
-
-      return () => {
-        socket.disconnect();
-      };
     }
   }, [user, setFavoriteIds, setUnreadCount]);
 
@@ -335,10 +321,10 @@ export default function App() {
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <h1 className="text-2xl font-bold tracking-tight text-primary cursor-pointer" onClick={() => updateParams({ favorites: null, admin: null, collections: null, detail: null, search: null, category: null, platform: null, page: null, ai: null, compare: null })}>
+            <h1 className="text-2xl font-bold tracking-tight text-primary cursor-pointer whitespace-nowrap" onClick={() => updateParams({ favorites: null, admin: null, collections: null, detail: null, search: null, category: null, platform: null, page: null, ai: null, compare: null })}>
               {t.app_name}
             </h1>
-            <div className="hidden md:flex items-center gap-4 ml-8">
+            <div className="hidden md:flex items-center gap-4 ml-4 lg:ml-8">
               <Button variant={!showCollections && !showFavorites && !showAdmin && !detailId && !showAI && !showRankings && !showSubmit && compareIds.length < 2 ? "secondary" : "ghost"} onClick={() => updateParams({ collections: null, favorites: null, admin: null, detail: null, ai: null, compare: null, rankings: null, submit: null })}>
                 {t.all}
               </Button>

@@ -69,7 +69,7 @@ export const CollectionsView: React.FC<{ onDownload: (id: number) => void }> = (
         </Button>
 
         <div className="relative h-64 rounded-2xl overflow-hidden">
-          <img src={selectedCollection.cover_image} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+          <img src={selectedCollection.cover_image} className="w-full h-full object-cover" referrerPolicy="no-referrer" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-8 text-white">
             <h2 className="text-4xl font-bold mb-2">{lang === 'zh' ? selectedCollection.title : (selectedCollection.title_en || selectedCollection.title)}</h2>
             <p className="text-lg opacity-90 max-w-2xl">{lang === 'zh' ? selectedCollection.description : (selectedCollection.description_en || selectedCollection.description)}</p>
@@ -103,6 +103,7 @@ export const CollectionsView: React.FC<{ onDownload: (id: number) => void }> = (
               src={c.cover_image} 
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
               referrerPolicy="no-referrer" 
+              loading="lazy"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-8 text-white">
               <h3 className="text-2xl font-bold mb-2 group-hover:text-primary transition-colors">{lang === 'zh' ? c.title : (c.title_en || c.title)}</h3>

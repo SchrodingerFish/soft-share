@@ -4,37 +4,26 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="00a13036-d33e-46d6-91cc-000a216ae9ea" name="更改" comment="Add skeleton components, debounce hook, and category management features">
+    <list default="true" id="00a13036-d33e-46d6-91cc-000a216ae9ea" name="更改" comment="Enhance software management with multilingual support for categories, collections, and tags; integrate Socket.io for real-time notifications">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data.db" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/db/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/db/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/middlewares/validate.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/middlewares/validate.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/routes/admin.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/admin.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/routes/categories.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/categories.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/routes/collections.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/collections.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/routes/comments.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/comments.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/routes/favorites.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/favorites.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/routes/rankings.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/rankings.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/routes/software.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/software.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/routes/submissions.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/submissions.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/routes/user.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/user.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/schemas/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/schemas/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/middlewares/rateLimiter.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/middlewares/rateLimiter.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/routes/ai.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/routes/ai.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/services/aiService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/server/services/aiService.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/AIAssistant.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/AIAssistant.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/AdminDashboard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/AdminDashboard.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/CollectionsView.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/CollectionsView.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/Rankings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Rankings.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/SoftwareCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/SoftwareCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/SoftwareComparison.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/SoftwareComparison.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/SoftwareDetail.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/SoftwareDetail.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/SoftwareSubmission.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/SoftwareSubmission.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/admin/CategoryManagement.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/admin/CategoryManagement.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/admin/CollectionManagement.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/admin/CollectionManagement.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/UserCenter.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/UserCenter.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/admin/SoftwareManagement.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/admin/SoftwareManagement.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/admin/SubmissionManagement.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/admin/SubmissionManagement.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/admin/TagManagement.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/admin/TagManagement.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/i18n.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/i18n.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/store.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/store.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/services/aiService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/aiService.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,7 +36,7 @@
     </persistenceIdMap>
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="88" />
+    <option name="cachedIndexableFilesCount" value="89" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
@@ -119,7 +108,7 @@
     "git-widget-placeholder": "dev",
     "ignore.virus.scanning.warn.message": "true",
     "javascript.preferred.runtime.type.id": "node",
-    "last_opened_file_path": "G:/Projects/WebStorm/soft-share",
+    "last_opened_file_path": "G:/Projects/WebStorm/soft-share/src/components",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -134,8 +123,11 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="G:\Projects\WebStorm\soft-share" />
-      <recent name="G:\Projects\WebStorm\softshare" />
+      <recent name="G:\Projects\WebStorm\soft-share\src\components" />
+      <recent name="G:\Projects\WebStorm\soft-share\src\components\admin" />
+      <recent name="G:\Projects\WebStorm\soft-share\src\services" />
+      <recent name="G:\Projects\WebStorm\soft-share\server\services" />
+      <recent name="G:\Projects\WebStorm\soft-share\server\routes" />
     </key>
   </component>
   <component name="RunManager">
@@ -173,7 +165,8 @@
       <workItem from="1775657077806" duration="1232000" />
       <workItem from="1775659288140" duration="2355000" />
       <workItem from="1775802646907" duration="7467000" />
-      <workItem from="1775877065236" duration="1249000" />
+      <workItem from="1775877065236" duration="1303000" />
+      <workItem from="1775891704244" duration="5564000" />
     </task>
     <task id="LOCAL-00001" summary="Add Turso database support and enhance error handling in API calls&#10;&#10;- Introduced Turso database configuration in .env.example&#10;- Updated API routes to use async/await and improved error handling&#10;- Enhanced favorite management in the software card component&#10;- Added Docker support with Dockerfile and docker-compose.yml&#10;- Updated README to reflect database changes and setup instructions">
       <option name="closed" value="true" />
@@ -199,7 +192,15 @@
       <option name="project" value="LOCAL" />
       <updated>1775810485713</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Enhance software management with multilingual support for categories, collections, and tags; integrate Socket.io for real-time notifications">
+      <option name="closed" value="true" />
+      <created>1775878545986</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1775878545986</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -222,7 +223,8 @@
     <MESSAGE value="Add Turso database support and enhance error handling in API calls&#10;&#10;- Introduced Turso database configuration in .env.example&#10;- Updated API routes to use async/await and improved error handling&#10;- Enhanced favorite management in the software card component&#10;- Added Docker support with Dockerfile and docker-compose.yml&#10;- Updated README to reflect database changes and setup instructions" />
     <MESSAGE value="Add support for multiple database configurations and enhance pagination component&#10;&#10;- Introduced SQLite and PostgreSQL support in the application&#10;- Updated environment configuration in .env.example&#10;- Enhanced pagination component with first and last page navigation&#10;- Improved error handling in user registration API&#10;- Updated README to reflect new database options and setup instructions" />
     <MESSAGE value="Add skeleton components, debounce hook, and category management features" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add skeleton components, debounce hook, and category management features" />
+    <MESSAGE value="Enhance software management with multilingual support for categories, collections, and tags; integrate Socket.io for real-time notifications" />
+    <option name="LAST_COMMIT_MESSAGE" value="Enhance software management with multilingual support for categories, collections, and tags; integrate Socket.io for real-time notifications" />
     <option name="NON_MODAL_COMMIT_POSTPONE_SLOW_CHECKS" value="false" />
   </component>
   <component name="github-copilot-workspace">

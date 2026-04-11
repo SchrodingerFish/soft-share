@@ -1,70 +1,103 @@
-# 🚀 SoftShare (软件分享平台)
+# 🚀 SoftShare
 
-![React](https://img.shields.io/badge/React-19-blue?logo=react)
+![React](https://img.shields.io/badge/React-18-blue?logo=react)
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38B2AC?logo=tailwind-css)
 ![Express](https://img.shields.io/badge/Express-4.x-lightgrey?logo=express)
 ![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?logo=postgresql)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)
 
-A full-stack web application built for sharing software, featuring a modern UI with Radix UI + Tailwind CSS, dark/light mode, internationalization (i18n), and a robust Node.js backend supporting both SQLite and PostgreSQL.
+A full-stack web application built for sharing, discovering, and downloading software. It features a modern UI with Shadcn UI + Tailwind CSS, dark/light mode, internationalization (i18n), real-time notifications, AI-powered recommendations, and a robust Node.js backend.
 
-## ✨ Features
+## ✨ Key Features
 
-- **📦 Software Catalog**: Browse software by platforms (Windows, macOS, Android) and categories (Dev, System, Download, Media, Productivity, Design).
-- **🔍 Search & Pagination**: Default pagination of 20 items per page (customizable to 10/20/50), and full-text search.
-- **🔗 URL State Sync**: Filter states (page, category, platform, search) are synchronized with the URL using React Router, enabling easy sharing and refreshing without losing state.
-- **📱 Responsive Design**: Fully optimized for mobile devices with a collapsible sidebar (Sheet) and responsive grid layouts.
-- **🌗 Theming & 🌐 i18n**: Seamless support for Dark/Light mode and English/Chinese language switching.
-- **🔐 Authentication**: Secure user login and registration system using JWT and bcrypt.
-- **❤️ Favorites**: Logged-in users can favorite software and view them in a dedicated collection.
-- **🛡️ Secure Download**: Users must enter a dynamic verification code (generated via SHA-256 hash) to unlock download links.
+- **📦 Software Catalog**: Browse software by platforms (Windows, macOS, Android) and categories. Includes detailed pages with screenshots, tutorials, and version history.
+- **🤖 AI Integration**: Built-in AI Assistant for software recommendations and AI-generated summaries for software details. Supports multiple providers (Google Gemini, OpenAI, Qwen, Custom).
+- **🔔 Real-time Notifications**: WebSocket-powered real-time notifications for updates, submission status, and system alerts.
+- **🌐 Internationalization (i18n)**: Seamless support for English and Chinese language switching across the entire application.
+- **🌗 Theming**: Smooth Dark/Light mode transitions with FOUC (Flash of Unstyled Content) prevention.
+- **🔐 Authentication & User Center**: Secure user login/registration (JWT + bcrypt). Users can manage profiles, view download history, favorite software, and track submissions.
+- **🛡️ Admin Dashboard**: Comprehensive admin panel to manage software, collections, categories, tags, user roles, and review software submissions.
+- **🔗 URL State Sync**: Filter states (category, platform, search) are synchronized with the URL, enabling easy sharing.
+- **📱 Responsive Design**: Fully optimized for mobile devices with a collapsible sidebar and responsive grid layouts.
+- **🚦 Rate Limiting**: Built-in API rate limiting to prevent abuse and ensure service stability.
 
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **Framework**: React 19 + Vite
-- **Routing**: React Router DOM (for URL state management)
+- **Framework**: React 18 + Vite
+- **Language**: TypeScript
 - **Styling**: Tailwind CSS v4
 - **UI Components**: shadcn/ui (Radix UI)
 - **Icons**: Lucide React
 - **State Management**: Zustand
-- **API Client**: Native `fetch` with JWT authorization
+- **Data Fetching**: React Query (`@tanstack/react-query`)
+- **Real-time**: Socket.io-client
+- **Animations**: Framer Motion
 
 ### Backend
-- **Framework**: Express.js (Node.js) with modular routing (`/auth`, `/software`, `/favorites`)
+- **Framework**: Express.js (Node.js)
 - **Language**: TypeScript
-- **Authentication**: JWT (JSON Web Tokens) + bcryptjs for password hashing
-- **Database**: Dual-database support:
-  - **SQLite/Turso**: via `@libsql/client` (Default)
-  - **PostgreSQL**: via `pg` (Configurable via environment variables)
+- **Database**: SQLite (via `better-sqlite3`)
+- **Real-time**: Socket.io
+- **Authentication**: JWT (JSON Web Tokens) + bcryptjs
+- **Security**: `express-rate-limit`
 
-## 🗄️ Database Schema
+## 🚀 Getting Started
 
-The application supports both SQLite (libSQL) and PostgreSQL with the following core tables:
+### 1. Prerequisites
+- Node.js (v18 or higher)
+- npm
 
-1. **`users`**
-   - `id`: INTEGER PRIMARY KEY
-   - `username`: TEXT UNIQUE
-   - `password`: TEXT (Hashed)
+### 2. Environment Variables
+Create a `.env` file in the root directory based on `.env.example`:
 
-2. **`software`**
-   - `id`: INTEGER PRIMARY KEY
-   - `name`: TEXT
-   - `version`: TEXT
-   - `platforms`: TEXT (JSON array)
-   - `category`: TEXT
-   - `size`: TEXT
-   - `update_date`: TEXT
-   - `description`: TEXT
-   - `screenshots`: TEXT (JSON array)
-   - `popularity`: INTEGER
-   - `download_url`: TEXT
+```env
+# Authentication Secrets
+JWT_SECRET="your_jwt_secret_key"
+SECRET_KEY="your_download_verification_secret_key"
 
-3. **`favorites`**
-   - `user_id`: INTEGER
-   - `software_id`: INTEGER
-   - PRIMARY KEY (`user_id`, `software_id`)
+# AI Configuration (Optional, defaults to Gemini if provided)
+GEMINI_API_KEY="your_gemini_api_key"
+
+# Database Configuration
+DB_TYPE="sqlite"
+SQLITE_URL="data.db"
+```
+
+### 3. Installation & Running
+
+```bash
+# Install dependencies
+npm install
+
+# Start the development server (Frontend + Backend concurrently)
+npm run dev
+```
+The application will be available at `http://localhost:3000`.
+
+### 4. Build for Production
+
+```bash
+# Build frontend and backend
+npm run build
+
+# Start the production server
+npm run start
+```
+
+## 🗄️ Database Schema Overview
+
+The application uses SQLite with the following core tables:
+- `users`: User accounts, roles (admin/user), and profiles.
+- `software`: Software details, download links, metadata.
+- `categories` & `tags`: Organization and filtering.
+- `collections`: Curated groups of software.
+- `favorites`: User favorite relationships.
+- `download_history`: Tracks user downloads.
+- `submissions`: User-submitted software awaiting admin review.
+- `comments`: User reviews and ratings for software.
+- `notifications`: System and user-specific alerts.
 
 ## 📡 API Specification
 
@@ -77,25 +110,6 @@ All API responses follow a unified standard format:
 }
 ```
 
-### 3.1 鉴权与签名机制 (Server-to-Server)
-本系统在向外部 API 发起请求时（或提供给外部调用的受保护接口），会在 HTTP Header 中携带以下鉴权信息：
-- `Authorization`: `Bearer <EXTERNAL_API_TOKEN>`
-- `x-timestamp`: 发起请求时的毫秒级时间戳 (例如 `1716192000000`)
-- `x-signature`: 使用 HMAC-SHA256 算法，以 `EXTERNAL_API_TOKEN` 为密钥，对 `x-timestamp` 进行哈希计算得到的十六进制字符串。
-
-*外部 API 应当校验时间戳是否过期（如误差在 5 分钟内），并重新计算签名进行比对，以防止重放攻击和伪造请求。*
-
-*(Note: Standard user authentication from the frontend uses standard JWT tokens passed via the `Authorization: Bearer <token>` header).*
-
-### Key Endpoints
-- `POST /api/auth/register`: Register a new user.
-- `POST /api/auth/login`: Login and receive a JWT.
-- `GET /api/software`: Get paginated software list with optional filters (`search`, `category`, `platform`).
-- `GET /api/software/:id/hint`: Get the dynamic verification code hint for a specific software.
-- `POST /api/software/:id/download`: Verify code and get the secure download URL.
-- `GET /api/favorites`: Get user's favorite software (Requires Auth).
-- `POST /api/favorites`: Toggle favorite status (Requires Auth).
-
 ## 🔑 Verification Code Logic
 
 To download a software, users must enter a daily dynamic verification code. The code is securely generated on the backend using a combination of the software ID, the current date, and a server secret key.
@@ -106,67 +120,7 @@ To download a software, users must enter a daily dynamic verification code. The 
 3. Hash the string using **SHA-256**.
 4. Extract the first 6 characters of the hex digest and convert them to uppercase.
 
-```typescript
-function getVerificationCode(id: number): string {
-  const date = new Date();
-  const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-  const str = `${id}-${dateStr}-${process.env.SECRET_KEY}`;
-  return crypto.createHash('sha256').update(str).digest('hex').substring(0, 6).toUpperCase();
-}
-```
 *(In the UI, a hint is automatically fetched and provided for testing purposes).*
 
-## 🚀 Deployment Process
-
-### 1. Prerequisites
-- Node.js (v18 or higher)
-- npm, pnpm, or yarn
-
-### 2. Environment Variables
-Create a `.env` file in the root directory (optional, defaults are provided in code):
-```env
-# Authentication & Signature Secrets
-JWT_SECRET="your_jwt_secret_key"
-SECRET_KEY="your_download_verification_secret_key"
-EXTERNAL_API_TOKEN="your_external_api_token"
-
-# Database Selection
-# "sqlite" (default), "postgres", or "turso"
-DB_TYPE="sqlite"
-
-# SQLite Configuration (Required if DB_TYPE="sqlite")
-SQLITE_URL="file:data.db"
-
-# Turso Database Configuration (Required if DB_TYPE="turso")
-TURSO_DATABASE_URL="libsql://mydb-xxx.aws-ap-northeast-1.turso.io"
-TURSO_AUTH_TOKEN="your_turso_auth_token"
-
-# PostgreSQL Configuration (Required if DB_TYPE="postgres")
-DATABASE_URL="postgresql://user:password@localhost:5432/softshare"
-```
-
-### 3. Build the Application
-The application is set up as a full-stack Vite + Express app. The build process compiles the React frontend into static files and the Express backend into a Node.js script.
-
-```bash
-# Install dependencies
-npm install
-
-# Build frontend and backend
-npm run build
-```
-
-### 4. Run in Production
-After building, the compiled assets will be in the `dist` folder. The Express server will serve the API routes and the static frontend files.
-
-```bash
-# Start the production server
-npm run start
-```
-By default, the server runs on port `3000`.
-
-### 5. Database Persistence
-The application supports three database backends:
-- **sqlite**: Uses a local SQLite file (defaults to `data.db`). Configure via `SQLITE_URL`.
-- **turso**: Uses Turso (libSQL) as a distributed edge database. Requires `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN`.
-- **postgres**: Set `DB_TYPE="postgres"` and provide a valid `DATABASE_URL` to use PostgreSQL. The system will automatically initialize the schema on the first run.
+## 📄 License
+All rights reserved.

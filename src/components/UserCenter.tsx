@@ -99,6 +99,9 @@ export const UserCenter: React.FC<{ onBack: () => void; onDetail: (id: number) =
       if (res.code === 0) {
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: 1 } : n));
         setUnreadCount(Math.max(0, unreadCount - 1));
+        
+        // Update global state
+        useAuthStore.getState().setUnreadCount(Math.max(0, unreadCount - 1));
       }
     } catch (err) {
       console.error(err);
@@ -111,6 +114,7 @@ export const UserCenter: React.FC<{ onBack: () => void; onDetail: (id: number) =
       if (res.code === 0) {
         setNotifications(prev => prev.map(n => ({ ...n, is_read: 1 })));
         setUnreadCount(0);
+        useAuthStore.getState().setUnreadCount(0);
         toast.success(t.all_read_success || "All notifications marked as read");
       }
     } catch (err) {
@@ -169,8 +173,8 @@ export const UserCenter: React.FC<{ onBack: () => void; onDetail: (id: number) =
   const menuItems: { id: string, label: string, icon: any, badge?: number }[] = [
     { id: "profile", label: t.profile_settings || "Profile", icon: User },
     { id: "history", label: t.download_history || "History", icon: History },
-    { id: "favorites", label: "Favorites", icon: Heart },
-    { id: "submissions", label: "Submissions", icon: Send },
+    { id: "favorites", label: t.favorites || "Favorites", icon: Heart },
+    { id: "submissions", label: t.submission || "Submissions", icon: Send },
     { id: "notifications", label: t.notifications || "Notifications", icon: Bell, badge: unreadCount },
     { id: "settings", label: t.ai_settings || "AI Settings", icon: Settings },
   ];
@@ -334,8 +338,10 @@ export const UserCenter: React.FC<{ onBack: () => void; onDetail: (id: number) =
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
               >
                 {history.length === 0 ? (
-                  <div className="col-span-full text-center py-20 text-muted-foreground italic">
-                    {t.no_history || "No download history yet"}
+                  <div className="col-span-full text-center py-20 text-muted-foreground italic flex flex-col items-center gap-4">
+                    <History className="h-12 w-12 opacity-20" />
+                    <p>{t.no_history || "No download history yet"}</p>
+                    <Button variant="link" onClick={() => onBack()}>去发现更多好软件</Button>
                   </div>
                 ) : (
                   history.map((item) => (
@@ -359,8 +365,10 @@ export const UserCenter: React.FC<{ onBack: () => void; onDetail: (id: number) =
                 className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
               >
                 {favorites.length === 0 ? (
-                  <div className="col-span-full text-center py-20 text-muted-foreground italic">
-                    No favorites yet
+                  <div className="col-span-full text-center py-20 text-muted-foreground italic flex flex-col items-center gap-4">
+                    <Heart className="h-12 w-12 opacity-20" />
+                    <p>{t.no_data || "No favorites yet"}</p>
+                    <Button variant="link" onClick={() => onBack()}>去发现更多好软件</Button>
                   </div>
                 ) : (
                   favorites.map((item) => (
@@ -380,17 +388,17 @@ export const UserCenter: React.FC<{ onBack: () => void; onDetail: (id: number) =
               >
                 {submissions.length === 0 ? (
                   <div className="text-center py-20 text-muted-foreground italic">
-                    No submissions yet
+                    {t.no_data || "No submissions yet"}
                   </div>
                 ) : (
                   <div className="border rounded-lg overflow-hidden bg-card">
                     <table className="w-full text-sm">
                       <thead className="bg-muted/50 border-b">
                         <tr>
-                          <th className="px-4 py-3 text-left font-medium">Software Name</th>
-                          <th className="px-4 py-3 text-left font-medium">Version</th>
-                          <th className="px-4 py-3 text-left font-medium">Status</th>
-                          <th className="px-4 py-3 text-left font-medium">Date</th>
+                          <th className="px-4 py-3 text-left font-medium">{t.software_name}</th>
+                          <th className="px-4 py-3 text-left font-medium">{t.version}</th>
+                          <th className="px-4 py-3 text-left font-medium">{t.submission_status}</th>
+                          <th className="px-4 py-3 text-left font-medium">{t.update_date}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y">
@@ -400,7 +408,7 @@ export const UserCenter: React.FC<{ onBack: () => void; onDetail: (id: number) =
                             <td className="px-4 py-3 text-muted-foreground">{s.version}</td>
                             <td className="px-4 py-3">
                               <Badge variant={s.status === 'approved' ? 'default' : s.status === 'rejected' ? 'destructive' : 'secondary'}>
-                                {s.status}
+                                {s.status === 'pending' ? t.status_pending : s.status === 'approved' ? t.status_approved : t.status_rejected}
                               </Badge>
                             </td>
                             <td className="px-4 py-3 text-muted-foreground">
